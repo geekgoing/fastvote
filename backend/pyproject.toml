@@ -1,0 +1,21 @@
+[project]
+name = "fastvote-backend"
+version = "0.1.0"
+description = "FastVote Backend API"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "redis",
+    "websockets",
+    "pydantic",
+    "python-multipart",
+    "bcrypt",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+]

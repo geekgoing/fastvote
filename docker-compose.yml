@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. Database (임시 저장소)
+  redis:
+    image: redis:alpine
+    container_name: fastvote-redis
+    ports:
+      - "6379:6379"
+
+  # 2. Backend (API & Socket)
+  backend:
+    build: ./backend
+    container_name: fastvote-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app # 코드 수정하면 바로 반영 (Hot Reload)
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+
+  # 3. Frontend (UI)
+  frontend:
+    build: ./frontend
+    container_name: fastvote-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # 호스트의 node_modules와 섞이지 않게 방지
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8001
+    depends_on:
+      - backend
