@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import { AppProviders } from "@/components/providers/app-providers";
+import { defaultLocale, getLocaleFromCookie, localeCookieName } from "@/lib/i18n";
+import { cookies } from "next/headers";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,17 +27,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read locale cookie server-side using Next.js cookies() API
+  const cookieLocale = await cookies().then((c) => c.get(localeCookieName)?.value ?? undefined);
+  const locale = getLocaleFromCookie(cookieLocale ?? defaultLocale);
+
   return (
-    <html lang="ko">
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AppProviders initialLocale={locale}>{children}</AppProviders>
       </body>
     </html>
   );

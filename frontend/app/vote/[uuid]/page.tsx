@@ -8,6 +8,7 @@ import { Check, Copy, ShieldCheck } from "lucide-react";
 import { api, APIError, type VoteRoom, type VoteResults } from "@/lib/api";
 import { getFingerprint } from "@/lib/fingerprint";
 import { Navbar } from "@/components/site/navbar";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,8 @@ type ViewState = 'loading' | 'password' | 'voting' | 'voted' | 'error';
 
 export default function VotePage({ params }: PageProps) {
   const { uuid } = use(params);
+  const { messages } = useLocale();
+  const t = messages.vote;
 
   const [state, setState] = useState<ViewState>('loading');
   const [room, setRoom] = useState<VoteRoom | null>(null);
@@ -59,9 +62,9 @@ export default function VotePage({ params }: PageProps) {
         }
       } catch (err) {
         if (err instanceof APIError && err.status === 404) {
-          setError('Vote room not found');
+          setError(t.errors.notFound);
         } else {
-          setError('Failed to load vote room');
+          setError(t.errors.loadFailed);
         }
         setState('error');
       }
@@ -133,9 +136,9 @@ export default function VotePage({ params }: PageProps) {
       setShouldConnectWs(true);
     } catch (err) {
       if (err instanceof APIError && err.status === 401) {
-        setPasswordError('Incorrect password');
+        setPasswordError(t.passwordErrors.incorrect);
       } else {
-        setPasswordError('Verification failed');
+        setPasswordError(t.passwordErrors.failed);
       }
     }
   };
@@ -153,10 +156,10 @@ export default function VotePage({ params }: PageProps) {
       setState('voted');
     } catch (err) {
       if (err instanceof APIError && err.status === 409) {
-        setVoteError('You have already voted');
+        setVoteError(t.voteErrors.alreadyVoted);
         setState('voted');
       } else {
-        setVoteError('Failed to submit vote');
+        setVoteError(t.voteErrors.submitFailed);
       }
     }
   };
@@ -182,13 +185,13 @@ export default function VotePage({ params }: PageProps) {
   // Loading state
   if (state === "loading") {
     return (
-      <div className="min-h-screen bg-emerald-50">
+      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
         <Navbar />
         <div className="flex min-h-[70vh] items-center justify-center px-4">
           <Card className="p-6">
-            <div className="flex items-center gap-3 text-sm text-zinc-600">
+            <div className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              투표방 정보를 불러오는 중...
+              {t.loading}
             </div>
           </Card>
         </div>
@@ -199,19 +202,17 @@ export default function VotePage({ params }: PageProps) {
   // Error state
   if (state === "error") {
     return (
-      <div className="min-h-screen bg-emerald-50">
+      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full p-8 text-center">
             <Badge variant="secondary" className="mb-3">
-              Error
+              {t.errorBadge}
             </Badge>
-            <h1 className="text-3xl font-bold text-zinc-900 mb-3">{error}</h1>
-            <p className="text-sm text-zinc-500 mb-6">
-              투표방을 찾을 수 없습니다. 홈으로 돌아가 다시 시도해주세요.
-            </p>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">{error}</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-300 mb-6">{t.errorDescription}</p>
             <Button asChild variant="secondary">
-              <Link href="/">홈으로 돌아가기</Link>
+              <Link href="/">{t.backHome}</Link>
             </Button>
           </Card>
         </div>
@@ -222,39 +223,37 @@ export default function VotePage({ params }: PageProps) {
   // Password entry state
   if (state === "password" && room) {
     return (
-      <div className="min-h-screen bg-emerald-50">
+      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full">
             <CardHeader>
-              <Badge className="w-fit">Protected</Badge>
-              <CardTitle className="mt-3 text-2xl text-zinc-900">
+              <Badge className="w-fit">{t.protectedBadge}</Badge>
+              <CardTitle className="mt-3 text-2xl text-zinc-900 dark:text-zinc-100">
                 {room.title}
               </CardTitle>
-              <p className="text-sm text-zinc-500">
-                이 투표는 비밀번호로 보호되어 있습니다. 비밀번호를 입력해 주세요.
-              </p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-300">{t.protectedDescription}</p>
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-semibold text-zinc-700">
-                    비밀번호
+                  <label htmlFor="password" className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                    {t.passwordLabel}
                   </label>
                     <Input
                       id="password"
                       type="password"
                       value={password}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                      placeholder="비밀번호를 입력하세요"
+                      placeholder={t.passwordPlaceholder}
                       autoFocus
                     />
                   {passwordError && (
-                    <div className="text-sm text-red-600">{passwordError}</div>
+                    <div className="text-sm text-red-600 dark:text-red-300">{passwordError}</div>
                   )}
                 </div>
                 <Button type="submit" className="w-full">
-                  입장하기
+                  {t.passwordSubmit}
                 </Button>
               </form>
             </CardContent>
@@ -267,29 +266,29 @@ export default function VotePage({ params }: PageProps) {
   // Voting/Results state
   if ((state === "voting" || state === "voted") && room) {
     return (
-      <div className="min-h-screen bg-emerald-50">
+      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="mb-8 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge>Live Vote</Badge>
+              <Badge>{t.liveBadge}</Badge>
               {room.has_password && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  <ShieldCheck size={12} /> Protected
+                  <ShieldCheck size={12} /> {t.protected}
                 </Badge>
               )}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-zinc-900 sm:text-4xl">
+                <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-4xl">
                   {room.title}
                 </h1>
-                <p className="text-sm text-zinc-500">
-                  {results ? `총 ${results.total_votes}명 참여` : "투표 결과를 불러오는 중..."}
+                <p className="text-sm text-zinc-500 dark:text-zinc-300">
+                  {results ? t.totalVotes(results.total_votes) : t.resultsLoading}
                 </p>
               </div>
               <Button variant="secondary" onClick={handleCopyLink}>
-                <Copy size={16} /> {copySuccess ? "복사됨" : "링크 복사"}
+                <Copy size={16} /> {copySuccess ? t.copied : t.copyLink}
               </Button>
             </div>
           </div>
@@ -297,7 +296,7 @@ export default function VotePage({ params }: PageProps) {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <Card>
               <CardHeader>
-                <CardTitle>투표하기</CardTitle>
+                <CardTitle className="text-zinc-900 dark:text-zinc-100">{t.voteTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 {state === "voting" && (
@@ -310,7 +309,7 @@ export default function VotePage({ params }: PageProps) {
                             "flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all" +
                             (selectedOption === option
                               ? " border-emerald-500 bg-emerald-50"
-                              : " border-zinc-200 bg-white hover:border-emerald-100")
+                              : " border-zinc-200 bg-white hover:border-emerald-100 dark:border-white/10 dark:bg-slate-900 dark:hover:border-emerald-400/40")
                           }
                         >
                           <div className="flex items-center gap-3">
@@ -319,14 +318,14 @@ export default function VotePage({ params }: PageProps) {
                                 "flex h-6 w-6 items-center justify-center rounded-full border" +
                                 (selectedOption === option
                                   ? " border-emerald-500 bg-emerald-500"
-                                  : " border-zinc-300 bg-white")
+                                  : " border-zinc-300 bg-white dark:border-white/30 dark:bg-slate-900")
                               }
                             >
                               {selectedOption === option && (
                                 <Check size={14} className="text-white" />
                               )}
                             </span>
-                            <span className="text-sm font-semibold text-zinc-800">
+                            <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                               {option}
                             </span>
                           </div>
@@ -344,22 +343,22 @@ export default function VotePage({ params }: PageProps) {
                     </div>
 
                     {voteError && (
-                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
                         {voteError}
                       </div>
                     )}
 
                     <Button type="submit" size="lg" disabled={!selectedOption} className="w-full">
-                      투표 제출
+                      {t.voteSubmit}
                     </Button>
                   </form>
                 )}
 
                 {state === "voted" && (
-                  <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                    <div className="font-semibold">투표가 완료되었습니다.</div>
-                    <div className="text-xs text-emerald-600">
-                      실시간 결과를 확인하고 링크를 공유해 보세요.
+                  <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                    <div className="font-semibold">{t.votedTitle}</div>
+                    <div className="text-xs text-emerald-600 dark:text-emerald-200">
+                      {t.votedDescription}
                     </div>
                   </div>
                 )}
@@ -368,7 +367,7 @@ export default function VotePage({ params }: PageProps) {
 
             <Card>
               <CardHeader className="space-y-2">
-                <CardTitle>실시간 결과</CardTitle>
+                <CardTitle className="text-zinc-900 dark:text-zinc-100">{t.resultsTitle}</CardTitle>
                 <Separator />
               </CardHeader>
               <CardContent className="space-y-4">
@@ -380,14 +379,14 @@ export default function VotePage({ params }: PageProps) {
                     return (
                       <div key={option} className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-zinc-800">
+                          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                             {option}
                           </span>
-                          <span className="text-xs text-zinc-500">
-                            {votes}표 ({percentage.toFixed(1)}%)
+                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                            {t.voteCount(votes, percentage)}
                           </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-zinc-100">
+                        <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-white/10">
                           <div
                             className="h-2 rounded-full bg-emerald-500 transition-all"
                             style={{ width: `${percentage}%` }}
@@ -397,15 +396,15 @@ export default function VotePage({ params }: PageProps) {
                     );
                   })
                 ) : (
-                  <div className="text-sm text-zinc-400">결과를 불러오는 중...</div>
+                  <div className="text-sm text-zinc-400 dark:text-zinc-500">{t.resultsPending}</div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          <div className="mt-8 text-center text-xs text-zinc-400">
-            <Link href="/polls" className="hover:text-emerald-600">
-              다른 투표 보기
+          <div className="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
+            <Link href="/polls" className="hover:text-emerald-600 dark:hover:text-emerald-300">
+              {t.otherPolls}
             </Link>
           </div>
         </div>
