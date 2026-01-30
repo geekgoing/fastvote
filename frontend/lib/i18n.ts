@@ -1,0 +1,425 @@
+export const locales = ["ko", "en"] as const;
+export type Locale = (typeof locales)[number];
+
+export const defaultLocale: Locale = "ko";
+export const localeCookieName = "locale";
+
+export const messages = {
+  ko: {
+    navbar: {
+      brand: "Fast Vote",
+      links: {
+        home: "홈",
+        polls: "투표 목록",
+        create: "투표 만들기",
+      },
+      actions: {
+        join: "투표 목록",
+        create: "투표 생성",
+      },
+      languageLabel: "언어",
+      themeLabel: "테마",
+    },
+    home: {
+      badge: "로그인 없이 3초 만에 시작",
+      heroTitleLine1: "빠르고 간편한",
+      heroTitleHighlight: "실시간 익명 투표",
+      heroDescription:
+        "Fast Vote는 복잡한 절차 없이 누구나 즉시 투표를 만들고 공유할 수 있는 플랫폼입니다. 의견을 모으고 결정을 내리는 가장 빠른 방법을 경험해보세요.",
+      primaryCta: "투표 만들기",
+      secondaryCta: "참여하기",
+      howItWorksBadge: "이용 방법",
+      howItWorksTitle: "3단계로 끝나는 빠른 투표",
+      howItWorksDescription: "복잡한 설정 없이 바로 시작하고, 공유하고, 결과를 확인하세요.",
+      features: [
+        {
+          title: "완전 익명",
+          description: "개인정보 없이 자유롭게 의견을 표현하세요.",
+        },
+        {
+          title: "실시간 결과",
+          description: "투표 현황이 즉시 반영되어 확인 가능합니다.",
+        },
+        {
+          title: "간편한 공유",
+          description: "링크 하나로 어디서든 쉽게 공유할 수 있어요.",
+        },
+      ],
+      steps: [
+        {
+          title: "투표 만들기",
+          description: "제목과 선택지를 입력하면 즉시 공유 가능한 링크가 생성됩니다.",
+        },
+        {
+          title: "링크 공유",
+          description: "카톡, 슬랙, 이메일 어디든 URL만 전달하면 누구나 참여할 수 있어요.",
+        },
+        {
+          title: "실시간 확인",
+          description: "투표와 동시에 결과가 반영되어 현재 흐름을 바로 파악할 수 있습니다.",
+        },
+      ],
+      useCasesBadge: "활용 사례",
+      useCasesTitle: "모든 팀과 커뮤니티에 어울리는 활용",
+      useCasesDescription: "빠른 의사결정부터 피드백 수집까지, 다양한 상황에 적용할 수 있습니다.",
+      useCases: [
+        {
+          title: "팀 의사결정",
+          description: "회의 전 의견을 빠르게 모아 결정 시간을 줄입니다.",
+        },
+        {
+          title: "이벤트 & 모임",
+          description: "메뉴, 날짜, 장소 투표로 참석자 합의를 쉽게 만드세요.",
+        },
+        {
+          title: "교육 & 워크숍",
+          description: "즉석 질문과 만족도 체크로 몰입도를 높입니다.",
+        },
+        {
+          title: "제품 피드백",
+          description: "기능 우선순위를 투표로 정리해 다음 스텝을 명확히 합니다.",
+        },
+      ],
+      faqBadge: "자주 묻는 질문",
+      faqTitle: "자주 묻는 질문",
+      faqDescription: "도입 전에 자주 궁금해하는 내용을 모았습니다.",
+      faqs: [
+        {
+          question: "로그인 없이도 안전하게 사용할 수 있나요?",
+          answer:
+            "개인정보를 수집하지 않고 링크 기반으로 동작하며, 비밀방과 비밀번호 옵션으로 접근을 제한할 수 있습니다.",
+        },
+        {
+          question: "투표 결과는 언제 업데이트되나요?",
+          answer:
+            "WebSocket 기반으로 참여 즉시 결과가 반영되어 새로고침 없이 확인 가능합니다.",
+        },
+        {
+          question: "중복 투표를 어떻게 방지하나요?",
+          answer:
+            "브라우저 식별 정보와 토큰을 조합해 동일 사용자 중복 투표를 최소화합니다.",
+        },
+        {
+          question: "투표방은 언제까지 유지되나요?",
+          answer:
+            "설정된 시간 이후 자동 만료되며, 만료 전까지 결과를 실시간으로 확인할 수 있습니다.",
+        },
+      ],
+      ctaTitle: "지금 바로 투표를 시작해 보세요",
+      ctaDescription: "링크 하나로 빠르게 의견을 모으고, 실시간으로 결과를 확인할 수 있습니다.",
+      ctaPrimary: "투표 만들기",
+      ctaSecondary: "참여하기",
+    },
+    create: {
+      backHome: "홈으로",
+      badge: "투표 생성",
+      title: "새로운 투표 만들기",
+      description: "제목과 선택지를 입력하면 즉시 투표 링크가 생성됩니다.",
+      cardTitle: "투표 정보",
+      questionLabel: "질문",
+      questionPlaceholder: "무엇을 투표할까요? (예: 점심 메뉴 추천)",
+      optionsLabel: "선택지",
+      optionsHint: "최소 2개",
+      optionPlaceholder: (index: number) => `옵션 ${index}`,
+      deleteOption: "선택지 삭제",
+      addOption: "옵션 추가하기",
+      expiresLabel: "만료 시간",
+      expiresOptions: [
+        { value: "1", label: "1시간" },
+        { value: "6", label: "6시간" },
+        { value: "12", label: "12시간" },
+        { value: "24", label: "24시간" },
+      ],
+      passwordLabel: "비밀번호 (선택)",
+      passwordPlaceholder: "비밀번호를 설정하면 투표 결과를 보호할 수 있습니다",
+      errors: {
+        missingTitle: "제목을 입력해주세요",
+        missingOptions: "최소 2개의 선택지를 입력해주세요",
+        submitFailed: "투표 생성에 실패했습니다",
+      },
+      submitting: "생성 중...",
+      submit: "투표 시작하기",
+    },
+    polls: {
+      badge: "실시간 투표",
+      title: "진행 중인 투표",
+      description: "현재 참여 가능한 투표 목록을 확인하고 빠르게 참여해보세요.",
+      mockBadge: "예시",
+      optionsCount: (count: number) => `${count}개 선택지`,
+      participants: (count: number) => `${count}명 참여`,
+      viewPoll: "투표 보기",
+      mockPolls: [
+        {
+          uuid: "demo-01",
+          title: "점심 메뉴는 무엇이 좋을까요?",
+          totalVotes: 24,
+          createdAt: "2025-01-12",
+          options: ["샐러드", "덮밥", "파스타"],
+        },
+        {
+          uuid: "demo-02",
+          title: "다음 회의 시간 투표",
+          totalVotes: 18,
+          createdAt: "2025-01-20",
+          options: ["오전 10시", "오후 2시", "오후 4시", "오후 5시"],
+        },
+        {
+          uuid: "demo-03",
+          title: "팀 워크숍 장소 선택",
+          totalVotes: 42,
+          createdAt: "2025-01-29",
+          options: ["강릉", "양양", "제주"],
+        },
+      ],
+    },
+    vote: {
+      loading: "투표방 정보를 불러오는 중...",
+      errorBadge: "오류",
+      errorDescription: "투표방을 찾을 수 없습니다. 홈으로 돌아가 다시 시도해주세요.",
+      backHome: "홈으로 돌아가기",
+      protectedBadge: "비밀번호 보호",
+      protectedDescription: "이 투표는 비밀번호로 보호되어 있습니다. 비밀번호를 입력해 주세요.",
+      passwordLabel: "비밀번호",
+      passwordPlaceholder: "비밀번호를 입력하세요",
+      passwordSubmit: "입장하기",
+      passwordErrors: {
+        incorrect: "비밀번호가 올바르지 않습니다",
+        failed: "검증에 실패했습니다",
+      },
+      liveBadge: "실시간 투표",
+      protected: "보호됨",
+      totalVotes: (count: number) => `총 ${count}명 참여`,
+      resultsLoading: "투표 결과를 불러오는 중...",
+      copyLink: "링크 복사",
+      copied: "복사됨",
+      voteTitle: "투표하기",
+      voteSubmit: "투표 제출",
+      voteErrors: {
+        alreadyVoted: "이미 투표하셨습니다",
+        submitFailed: "투표 제출에 실패했습니다",
+      },
+      votedTitle: "투표가 완료되었습니다.",
+      votedDescription: "실시간 결과를 확인하고 링크를 공유해 보세요.",
+      resultsTitle: "실시간 결과",
+      resultsPending: "결과를 불러오는 중...",
+      voteCount: (votes: number, percentage: number) => `${votes}표 (${percentage.toFixed(1)}%)`,
+      otherPolls: "다른 투표 보기",
+      errors: {
+        notFound: "투표방을 찾을 수 없습니다",
+        loadFailed: "투표방 불러오기에 실패했습니다",
+      },
+    },
+  },
+  en: {
+    navbar: {
+      brand: "Fast Vote",
+      links: {
+        home: "Home",
+        polls: "Polls",
+        create: "Create",
+      },
+      actions: {
+        join: "Polls",
+        create: "Create poll",
+      },
+      languageLabel: "Language",
+      themeLabel: "Theme",
+    },
+    home: {
+      badge: "Start in 3 seconds, no login",
+      heroTitleLine1: "Fast and simple",
+      heroTitleHighlight: "Real-time anonymous polls",
+      heroDescription:
+        "Fast Vote lets anyone create and share polls instantly without complicated steps. Experience the fastest way to gather opinions and make decisions.",
+      primaryCta: "Create poll",
+      secondaryCta: "Join poll",
+      howItWorksBadge: "How it works",
+      howItWorksTitle: "Finish in 3 quick steps",
+      howItWorksDescription: "Start, share, and see results right away without extra setup.",
+      features: [
+        {
+          title: "Fully anonymous",
+          description: "Share your opinion freely without personal data.",
+        },
+        {
+          title: "Live results",
+          description: "Votes update instantly so you can see the trend.",
+        },
+        {
+          title: "Easy sharing",
+          description: "Share anywhere with a single link.",
+        },
+      ],
+      steps: [
+        {
+          title: "Create a poll",
+          description: "Enter a title and options to get a shareable link instantly.",
+        },
+        {
+          title: "Share the link",
+          description: "Send the URL via chat, Slack, or email—anyone can join.",
+        },
+        {
+          title: "See results live",
+          description: "Votes update in real time so you can read the flow instantly.",
+        },
+      ],
+      useCasesBadge: "Use cases",
+      useCasesTitle: "Fits every team and community",
+      useCasesDescription: "From quick decisions to feedback collection, it works across scenarios.",
+      useCases: [
+        {
+          title: "Team decisions",
+          description: "Collect opinions before meetings and decide faster.",
+        },
+        {
+          title: "Events & gatherings",
+          description: "Agree on menus, dates, and venues with a quick vote.",
+        },
+        {
+          title: "Education & workshops",
+          description: "Use quick polls to boost engagement and capture feedback.",
+        },
+        {
+          title: "Product feedback",
+          description: "Prioritize features and clarify the next steps.",
+        },
+      ],
+      faqBadge: "FAQ",
+      faqTitle: "Frequently asked questions",
+      faqDescription: "Common questions before you start.",
+      faqs: [
+        {
+          question: "Is it safe to use without login?",
+          answer:
+            "We collect no personal data and rely on shareable links. Private polls can be protected with a password.",
+        },
+        {
+          question: "When do results update?",
+          answer: "Results update instantly via WebSocket without page refresh.",
+        },
+        {
+          question: "How do you prevent duplicate votes?",
+          answer: "We minimize duplicates by combining browser identifiers and tokens.",
+        },
+        {
+          question: "How long are polls kept?",
+          answer: "Polls expire automatically after the configured time and stay live until then.",
+        },
+      ],
+      ctaTitle: "Start your poll right now",
+      ctaDescription: "Gather opinions fast and see results live with a single link.",
+      ctaPrimary: "Create poll",
+      ctaSecondary: "Join poll",
+    },
+    create: {
+      backHome: "Back home",
+      badge: "Create Poll",
+      title: "Create a new poll",
+      description: "Enter a title and options to generate a poll link instantly.",
+      cardTitle: "Poll details",
+      questionLabel: "Question",
+      questionPlaceholder: "What should people vote on? (e.g., Lunch menu ideas)",
+      optionsLabel: "Options",
+      optionsHint: "At least 2",
+      optionPlaceholder: (index: number) => `Option ${index}`,
+      deleteOption: "Remove option",
+      addOption: "Add option",
+      expiresLabel: "Expires in",
+      expiresOptions: [
+        { value: "1", label: "1 hour" },
+        { value: "6", label: "6 hours" },
+        { value: "12", label: "12 hours" },
+        { value: "24", label: "24 hours" },
+      ],
+      passwordLabel: "Password (optional)",
+      passwordPlaceholder: "Set a password to protect results",
+      errors: {
+        missingTitle: "Please enter a title",
+        missingOptions: "Please enter at least two options",
+        submitFailed: "Failed to create poll",
+      },
+      submitting: "Creating...",
+      submit: "Start poll",
+    },
+    polls: {
+      badge: "Live Polls",
+      title: "Active polls",
+      description: "Browse polls you can join now and jump in.",
+      mockBadge: "Mock",
+      optionsCount: (count: number) => `${count} options`,
+      participants: (count: number) => `${count} participants`,
+      viewPoll: "View poll",
+      mockPolls: [
+        {
+          uuid: "demo-01",
+          title: "What should we eat for lunch?",
+          totalVotes: 24,
+          createdAt: "2025-01-12",
+          options: ["Salad", "Rice bowl", "Pasta"],
+        },
+        {
+          uuid: "demo-02",
+          title: "Vote for the next meeting time",
+          totalVotes: 18,
+          createdAt: "2025-01-20",
+          options: ["10 AM", "2 PM", "4 PM", "5 PM"],
+        },
+        {
+          uuid: "demo-03",
+          title: "Choose a team workshop location",
+          totalVotes: 42,
+          createdAt: "2025-01-29",
+          options: ["Gangneung", "Yangyang", "Jeju"],
+        },
+      ],
+    },
+    vote: {
+      loading: "Loading vote room...",
+      errorBadge: "Error",
+      errorDescription: "We couldn't find that poll. Return home and try again.",
+      backHome: "Back to home",
+      protectedBadge: "Protected",
+      protectedDescription: "This poll is protected. Please enter the password to continue.",
+      passwordLabel: "Password",
+      passwordPlaceholder: "Enter password",
+      passwordSubmit: "Enter",
+      passwordErrors: {
+        incorrect: "Incorrect password",
+        failed: "Verification failed",
+      },
+      liveBadge: "Live Vote",
+      protected: "Protected",
+      totalVotes: (count: number) => `Total ${count} votes`,
+      resultsLoading: "Loading results...",
+      copyLink: "Copy link",
+      copied: "Copied",
+      voteTitle: "Cast your vote",
+      voteSubmit: "Submit vote",
+      voteErrors: {
+        alreadyVoted: "You have already voted",
+        submitFailed: "Failed to submit vote",
+      },
+      votedTitle: "Vote submitted.",
+      votedDescription: "Check live results and share the link.",
+      resultsTitle: "Live results",
+      resultsPending: "Loading results...",
+      voteCount: (votes: number, percentage: number) => `${votes} votes (${percentage.toFixed(1)}%)`,
+      otherPolls: "See other polls",
+      errors: {
+        notFound: "Vote room not found",
+        loadFailed: "Failed to load vote room",
+      },
+    },
+  },
+} as const;
+
+export type Messages = (typeof messages)[Locale];
+
+export const isLocale = (value?: string | null): value is Locale =>
+  locales.includes((value ?? "") as Locale);
+
+export const getLocaleFromCookie = (value?: string | null): Locale =>
+  isLocale(value) ? value : defaultLocale;
+
+export const getMessages = (locale: Locale): Messages => messages[locale];

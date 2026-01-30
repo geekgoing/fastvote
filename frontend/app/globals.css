@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: theme(colors.emerald.50);
   --foreground: theme(colors.zinc.900);
@@ -7,6 +9,15 @@
   --accent-dim: theme(colors.emerald.600);
   --border: theme(colors.emerald.100);
   --surface: theme(colors.emerald.50);
+}
+
+.dark {
+  --background: theme(colors.slate.950);
+  --foreground: theme(colors.zinc.100);
+  --accent: theme(colors.emerald.400);
+  --accent-dim: theme(colors.emerald.500);
+  --border: theme(colors.slate.800);
+  --surface: theme(colors.slate.900);
 }
 
 @theme inline {

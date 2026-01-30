@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 import { Navbar } from "@/components/site/navbar";
+import { useLocale } from "@/components/providers/locale-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function CreatePage() {
   const router = useRouter();
+  const { messages } = useLocale();
+  const t = messages.create;
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [expiresIn, setExpiresIn] = useState("24");
@@ -39,18 +42,18 @@ export default function CreatePage() {
     setOptions(newOptions);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
     if (!title.trim()) {
-      setError("제목을 입력해주세요");
+      setError(t.errors.missingTitle);
       return;
     }
 
     const validOptions = options.filter((opt) => opt.trim());
     if (validOptions.length < 2) {
-      setError("최소 2개의 선택지를 입력해주세요");
+      setError(t.errors.missingOptions);
       return;
     }
 
@@ -72,20 +75,20 @@ export default function CreatePage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || "투표 생성에 실패했습니다");
+        throw new Error(data.detail || t.errors.submitFailed);
       }
 
       const data = await response.json();
       router.push(`/vote/${data.uuid}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "투표 생성에 실패했습니다");
+      setError(err instanceof Error ? err.message : t.errors.submitFailed);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navbar />
       <main className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-4">
@@ -95,48 +98,46 @@ export default function CreatePage() {
             className="w-fit"
             onClick={() => router.push("/")}
           >
-            <ArrowLeft size={16} /> 홈으로
+            <ArrowLeft size={16} /> {t.backHome}
           </Button>
           <div>
-            <Badge className="mb-3">Create Poll</Badge>
-            <h1 className="text-3xl font-bold text-zinc-900">새로운 투표 만들기</h1>
-            <p className="mt-2 text-zinc-500">
-              제목과 선택지를 입력하면 즉시 투표 링크가 생성됩니다.
-            </p>
+            <Badge className="mb-3">{t.badge}</Badge>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{t.title}</h1>
+            <p className="mt-2 text-zinc-500 dark:text-zinc-300">{t.description}</p>
           </div>
         </div>
 
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>투표 정보</CardTitle>
+            <CardTitle className="text-zinc-900 dark:text-zinc-100">{t.cardTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-zinc-700">질문</label>
+                <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.questionLabel}</label>
                 <Textarea
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="무엇을 투표할까요? (예: 점심 메뉴 추천)"
+                  placeholder={t.questionPlaceholder}
                 />
               </div>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold text-zinc-700">선택지</label>
-                  <span className="text-xs text-zinc-400">최소 2개</span>
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.optionsLabel}</label>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">{t.optionsHint}</span>
                 </div>
                 <div className="space-y-3">
                   {options.map((option, index) => (
                     <div key={index} className="flex gap-3">
                       <div className="flex-1 relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400 dark:text-zinc-500">
                           {index + 1}
                         </span>
                         <Input
                           value={option}
                           onChange={(e) => updateOption(index, e.target.value)}
-                          placeholder={`옵션 ${index + 1}`}
+                          placeholder={t.optionPlaceholder(index + 1)}
                           className="pl-8"
                         />
                       </div>
@@ -146,16 +147,16 @@ export default function CreatePage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeOption(index)}
-                          aria-label="선택지 삭제"
+                          aria-label={t.deleteOption}
                         >
-                          <Trash2 size={18} className="text-zinc-500" />
+                          <Trash2 size={18} className="text-zinc-500 dark:text-zinc-300" />
                         </Button>
                       )}
                     </div>
                   ))}
                 </div>
                 <Button type="button" variant="outline" onClick={addOption}>
-                  <Plus size={16} /> 옵션 추가하기
+                  <Plus size={16} /> {t.addOption}
                 </Button>
               </div>
 
@@ -163,14 +164,9 @@ export default function CreatePage() {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-700">만료 시간</label>
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {[
-                      { value: "1", label: "1시간" },
-                      { value: "6", label: "6시간" },
-                      { value: "12", label: "12시간" },
-                      { value: "24", label: "24시간" },
-                    ].map((time) => (
+                    {t.expiresOptions.map((time) => (
                       <Button
                         key={time.value}
                         type="button"
@@ -184,24 +180,24 @@ export default function CreatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-700">비밀번호 (선택)</label>
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
                   <Input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="비밀번호를 설정하면 투표 결과를 보호할 수 있습니다"
+                    placeholder={t.passwordPlaceholder}
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
                   {error}
                 </div>
               )}
 
               <Button type="submit" size="lg" disabled={isLoading} className="w-full">
-                {isLoading ? "생성 중..." : "투표 시작하기"}
+                {isLoading ? t.submitting : t.submit}
               </Button>
             </form>
           </CardContent>
