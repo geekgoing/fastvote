@@ -152,7 +152,7 @@ export default function VotePage({ params }: PageProps) {
     const fingerprint = getFingerprint();
 
     try {
-      await api.vote(uuid, selectedOption, fingerprint);
+      await api.vote(uuid, [selectedOption], fingerprint);
       setState('voted');
     } catch (err) {
       if (err instanceof APIError && err.status === 409) {
@@ -176,16 +176,20 @@ export default function VotePage({ params }: PageProps) {
   };
 
   // Calculate percentage for progress bars
+  const totalVotes = results
+    ? Object.values(results.results).reduce((sum, value) => sum + value, 0)
+    : 0;
+
   const getPercentage = (option: string): number => {
-    if (!results || results.total_votes === 0) return 0;
+    if (!results || totalVotes === 0) return 0;
     const votes = results.results[option] || 0;
-    return (votes / results.total_votes) * 100;
+    return (votes / totalVotes) * 100;
   };
 
   // Loading state
   if (state === "loading") {
     return (
-      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
         <div className="flex min-h-[70vh] items-center justify-center px-4">
           <Card className="p-6">
@@ -202,7 +206,7 @@ export default function VotePage({ params }: PageProps) {
   // Error state
   if (state === "error") {
     return (
-      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full p-8 text-center">
@@ -223,7 +227,7 @@ export default function VotePage({ params }: PageProps) {
   // Password entry state
   if (state === "password" && room) {
     return (
-      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-16">
           <Card className="w-full">
@@ -266,7 +270,7 @@ export default function VotePage({ params }: PageProps) {
   // Voting/Results state
   if ((state === "voting" || state === "voted") && room) {
     return (
-      <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="mb-8 flex flex-col gap-4">
@@ -284,7 +288,7 @@ export default function VotePage({ params }: PageProps) {
                   {room.title}
                 </h1>
                 <p className="text-sm text-zinc-500 dark:text-zinc-300">
-                  {results ? t.totalVotes(results.total_votes) : t.resultsLoading}
+                  {results ? t.totalVotes(totalVotes) : t.resultsLoading}
                 </p>
               </div>
               <Button variant="secondary" onClick={handleCopyLink}>
@@ -307,10 +311,10 @@ export default function VotePage({ params }: PageProps) {
                           key={option}
                           className={
                             "flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all" +
-                            (selectedOption === option
-                              ? " border-emerald-500 bg-emerald-50"
-                              : " border-zinc-200 bg-white hover:border-emerald-100 dark:border-white/10 dark:bg-slate-900 dark:hover:border-emerald-400/40")
-                          }
+                             (selectedOption === option
+                               ? " border-emerald-500 bg-emerald-50"
+                               : " border-zinc-200 bg-slate-50 hover:border-emerald-100 dark:border-white/10 dark:bg-slate-900 dark:hover:border-emerald-400/40")
+                           }
                         >
                           <div className="flex items-center gap-3">
                             <span
@@ -318,7 +322,7 @@ export default function VotePage({ params }: PageProps) {
                                 "flex h-6 w-6 items-center justify-center rounded-full border" +
                                 (selectedOption === option
                                   ? " border-emerald-500 bg-emerald-500"
-                                  : " border-zinc-300 bg-white dark:border-white/30 dark:bg-slate-900")
+                                 : " border-zinc-300 bg-slate-50 dark:border-white/30 dark:bg-slate-900")
                               }
                             >
                               {selectedOption === option && (

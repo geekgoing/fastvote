@@ -12,8 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { api } from "@/lib/api";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -60,25 +59,15 @@ export default function CreatePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/rooms`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          options: validOptions,
-          expires_in: parseInt(expiresIn),
-          password: password.trim() || undefined,
-        }),
+      const ttl = parseInt(expiresIn, 10) * 60 * 60;
+      const data = await api.createRoom({
+        title: title.trim(),
+        options: validOptions,
+        password: password.trim() || undefined,
+        ttl,
+        tags: [],
+        allow_multiple: false,
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || t.errors.submitFailed);
-      }
-
-      const data = await response.json();
       router.push(`/vote/${data.uuid}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errors.submitFailed);

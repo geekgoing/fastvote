@@ -10,17 +10,53 @@ export interface VoteRoom {
   options: string[];
   has_password: boolean;
   created_at: string;
+  tags?: string[];
+  allow_multiple?: boolean;
+  expires_at?: string | null;
 }
 
 export interface VoteResults {
   room_uuid: string;
+  title: string;
   results: Record<string, number>;
-  total_votes: number;
+  expires_at: string | null;
 }
 
 export interface VoteRequest {
-  option: string;
+  options: string[];
   fingerprint: string;
+}
+
+export interface CreateRoomRequest {
+  title: string;
+  options: string[];
+  password?: string;
+  ttl: number;
+  tags: string[];
+  allow_multiple: boolean;
+}
+
+export interface CreateRoomResponse {
+  uuid: string;
+}
+
+export interface RoomSummary {
+  uuid: string;
+  title: string;
+  tags: string[];
+  total_votes: number;
+  created_at: string;
+  expires_at: string | null;
+  has_password: boolean;
+  allow_multiple: boolean;
+}
+
+export interface RoomListResponse {
+  rooms: RoomSummary[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
 }
 
 export interface PasswordVerifyRequest {
@@ -76,11 +112,37 @@ export const api = {
       body: JSON.stringify({ password }),
     }),
 
+  // List rooms
+  listRooms: (params?: {
+    search?: string;
+    tags?: string[];
+    sort?: 'latest' | 'popular';
+    page?: number;
+    page_size?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.tags && params.tags.length > 0) searchParams.set('tags', params.tags.join(','));
+    if (params?.sort) searchParams.set('sort', params.sort);
+    if (params?.page) searchParams.set('page', String(params.page));
+    if (params?.page_size) searchParams.set('page_size', String(params.page_size));
+
+    const queryString = searchParams.toString();
+    return fetchAPI<RoomListResponse>(`/rooms${queryString ? `?${queryString}` : ''}`);
+  },
+
+  // Create room
+  createRoom: (payload: CreateRoomRequest) =>
+    fetchAPI<CreateRoomResponse>(`/rooms`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
   // Submit vote
-  vote: (uuid: string, option: string, fingerprint: string) =>
+  vote: (uuid: string, options: string[], fingerprint: string) =>
     fetchAPI<{ success: boolean; message: string }>(`/rooms/${uuid}/vote`, {
       method: 'POST',
-      body: JSON.stringify({ option, fingerprint }),
+      body: JSON.stringify({ options, fingerprint }),
     }),
 
   // Get current results
