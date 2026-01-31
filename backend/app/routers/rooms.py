@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from app.models.schemas import RoomCreate, VoteRequest, PasswordVerifyRequest, SortOrder, RoomListResponse
+from app.models.schemas import RoomCreate, VoteRequest, PasswordVerifyRequest, SortOrder, RoomListResponse, CommentCreate, Comment
 from app.services.room import create_room, get_room, get_vote_results, get_room_list
 from app.services.vote import has_voted, cast_vote
+from app.services.comment import create_comment, get_comments
 from app.utils.security import verify_password
 from app.routers.websocket import broadcast_results
+from app.database import get_redis
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
 
@@ -36,7 +38,8 @@ async def create_room_endpoint(room: RoomCreate):
         password=room.password,
         ttl=room.ttl,
         tags=room.tags,
-        allow_multiple=room.allow_multiple
+        allow_multiple=room.allow_multiple,
+        is_private=room.is_private
     )
 
 
@@ -109,3 +112,32 @@ async def get_results(room_uuid: str):
         "results": results,
         "expires_at": room["expires_at"]
     }
+
+
+@router.post("/{room_uuid}/comments", response_model=Comment)
+async def create_comment_endpoint(room_uuid: str, comment: CommentCreate):
+    """댓글 작성"""
+    room = await get_room(room_uuid)
+    if not room:
+        raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
+
+    # 방의 남은 TTL 가져오기
+    redis = get_redis()
+    ttl = await redis.ttl(f"room:{room_uuid}")
+
+    return await create_comment(
+        room_uuid=room_uuid,
+        content=comment.content,
+        nickname=comment.nickname,
+        ttl=ttl if ttl > 0 else None
+    )
+
+
+@router.get("/{room_uuid}/comments", response_model=list[Comment])
+async def list_comments(room_uuid: str):
+    """댓글 목록 조회"""
+    room = await get_room(room_uuid)
+    if not room:
+        raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
+
+    return await get_comments(room_uuid)

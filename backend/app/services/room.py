@@ -12,7 +12,8 @@ async def create_room(
     password: str | None,
     ttl: int,
     tags: list[str] | None = None,
-    allow_multiple: bool = False
+    allow_multiple: bool = False,
+    is_private: bool = False
 ) -> dict:
     """투표방 생성"""
     redis = get_redis()
@@ -32,6 +33,7 @@ async def create_room(
         "has_password": password is not None,
         "tags": tags,
         "allow_multiple": allow_multiple,
+        "is_private": is_private,
         "total_votes": 0,
     }
 
@@ -113,6 +115,9 @@ async def get_room_list(
     for room_uuid in room_uuids:
         room = await get_room(room_uuid)
         if room:
+            # 비공개 방 필터링 (공개 목록에서 제외)
+            if room.get("is_private", False):
+                continue
             # 검색 필터 (제목만)
             if search and search.lower() not in room.get("title", "").lower():
                 continue
@@ -143,6 +148,7 @@ async def get_room_list(
             "expires_at": room["expires_at"],
             "has_password": room.get("has_password", False),
             "allow_multiple": room.get("allow_multiple", False),
+            "is_private": room.get("is_private", False),
         })
 
     return {
