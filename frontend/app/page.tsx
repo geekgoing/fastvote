@@ -16,7 +16,7 @@ export default function Home() {
   const featureIcons = [ShieldCheck, Zap, CheckCircle2];
 
   return (
-    <div className="min-h-screen bg-emerald-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navbar />
       <main className="relative overflow-hidden">
         <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-24 pt-16 text-center sm:px-6">
@@ -105,7 +105,7 @@ export default function Home() {
           </div>
           <div className="mt-10 grid gap-4">
             {t.faqs.map((faq) => (
-              <Card key={faq.question} className="border-emerald-100 bg-white p-6 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+              <Card key={faq.question} className="border-emerald-100 bg-slate-50 p-6 dark:border-emerald-500/20 dark:bg-emerald-500/5">
                 <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{faq.question}</h3>
                 <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{faq.answer}</p>
               </Card>
@@ -121,7 +121,7 @@ export default function Home() {
                 <p className="mt-2 text-sm text-emerald-50">{t.ctaDescription}</p>
               </div>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Button asChild size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-200 dark:border-slate-700">
+                <Button asChild size="lg" className="bg-slate-50 text-emerald-600 hover:bg-emerald-50 dark:bg-slate-900 dark:text-emerald-200 dark:border-slate-700">
                   <Link href="/create" className="flex items-center justify-center">{t.ctaPrimary}</Link>
                 </Button>
                 <Button asChild size="lg" variant="secondary" className="border-white/20 bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-slate-700 dark:text-emerald-100 dark:border-slate-600">

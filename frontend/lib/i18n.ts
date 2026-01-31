@@ -7,7 +7,7 @@ export const localeCookieName = "locale";
 export const messages = {
   ko: {
     navbar: {
-      brand: "Fast Vote",
+      brand: "FastVote",
       links: {
         home: "홈",
         polls: "투표 목록",
@@ -25,7 +25,7 @@ export const messages = {
       heroTitleLine1: "빠르고 간편한",
       heroTitleHighlight: "실시간 익명 투표",
       heroDescription:
-        "Fast Vote는 복잡한 절차 없이 누구나 즉시 투표를 만들고 공유할 수 있는 플랫폼입니다. 의견을 모으고 결정을 내리는 가장 빠른 방법을 경험해보세요.",
+        "FastVote는 복잡한 절차 없이 누구나 즉시 투표를 만들고 공유할 수 있는 플랫폼입니다. 의견을 모으고 결정을 내리는 가장 빠른 방법을 경험해보세요.",
       primaryCta: "투표 만들기",
       secondaryCta: "참여하기",
       howItWorksBadge: "이용 방법",
@@ -144,33 +144,21 @@ export const messages = {
       badge: "실시간 투표",
       title: "진행 중인 투표",
       description: "현재 참여 가능한 투표 목록을 확인하고 빠르게 참여해보세요.",
-      mockBadge: "예시",
+      searchLabel: "검색",
+      searchPlaceholder: "제목 또는 태그로 검색",
+      searchButton: "검색",
+      sortLabel: "정렬",
+      sortLatest: "최신순",
+      sortPopular: "인기순",
+      emptyState: "검색 결과가 없습니다.",
+      protectedBadge: "비밀방",
+      openBadge: "공개",
+      multipleAllowed: "복수 선택",
+      singleOnly: "단일 선택",
+      noTags: "태그 없음",
       optionsCount: (count: number) => `${count}개 선택지`,
       participants: (count: number) => `${count}명 참여`,
       viewPoll: "투표 보기",
-      mockPolls: [
-        {
-          uuid: "demo-01",
-          title: "점심 메뉴는 무엇이 좋을까요?",
-          totalVotes: 24,
-          createdAt: "2025-01-12",
-          options: ["샐러드", "덮밥", "파스타"],
-        },
-        {
-          uuid: "demo-02",
-          title: "다음 회의 시간 투표",
-          totalVotes: 18,
-          createdAt: "2025-01-20",
-          options: ["오전 10시", "오후 2시", "오후 4시", "오후 5시"],
-        },
-        {
-          uuid: "demo-03",
-          title: "팀 워크숍 장소 선택",
-          totalVotes: 42,
-          createdAt: "2025-01-29",
-          options: ["강릉", "양양", "제주"],
-        },
-      ],
     },
     vote: {
       loading: "투표방 정보를 불러오는 중...",
@@ -212,7 +200,7 @@ export const messages = {
   },
   en: {
     navbar: {
-      brand: "Fast Vote",
+      brand: "FastVote",
       links: {
         home: "Home",
         polls: "Polls",
@@ -230,7 +218,7 @@ export const messages = {
       heroTitleLine1: "Fast and simple",
       heroTitleHighlight: "Real-time anonymous polls",
       heroDescription:
-        "Fast Vote lets anyone create and share polls instantly without complicated steps. Experience the fastest way to gather opinions and make decisions.",
+        "FastVote lets anyone create and share polls instantly without complicated steps. Experience the fastest way to gather opinions and make decisions.",
       primaryCta: "Create poll",
       secondaryCta: "Join poll",
       howItWorksBadge: "How it works",
@@ -346,33 +334,21 @@ export const messages = {
       badge: "Live Polls",
       title: "Active polls",
       description: "Browse polls you can join now and jump in.",
-      mockBadge: "Mock",
+      searchLabel: "Search",
+      searchPlaceholder: "Search by title or tag",
+      searchButton: "Search",
+      sortLabel: "Sort",
+      sortLatest: "Latest",
+      sortPopular: "Popular",
+      emptyState: "No polls found.",
+      protectedBadge: "Private",
+      openBadge: "Public",
+      multipleAllowed: "Multi-select",
+      singleOnly: "Single choice",
+      noTags: "No tags",
       optionsCount: (count: number) => `${count} options`,
       participants: (count: number) => `${count} participants`,
       viewPoll: "View poll",
-      mockPolls: [
-        {
-          uuid: "demo-01",
-          title: "What should we eat for lunch?",
-          totalVotes: 24,
-          createdAt: "2025-01-12",
-          options: ["Salad", "Rice bowl", "Pasta"],
-        },
-        {
-          uuid: "demo-02",
-          title: "Vote for the next meeting time",
-          totalVotes: 18,
-          createdAt: "2025-01-20",
-          options: ["10 AM", "2 PM", "4 PM", "5 PM"],
-        },
-        {
-          uuid: "demo-03",
-          title: "Choose a team workshop location",
-          totalVotes: 42,
-          createdAt: "2025-01-29",
-          options: ["Gangneung", "Yangyang", "Jeju"],
-        },
-      ],
     },
     vote: {
       loading: "Loading vote room...",
