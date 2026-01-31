@@ -557,7 +557,20 @@ export default function VotePage({ params }: PageProps) {
                                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip formatter={(value) => [`${value ?? 0}표`, '득표수']} />
+                              <Tooltip
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = payload[0];
+                                    return (
+                                      <div className="rounded-lg bg-white dark:bg-gray-800 px-3 py-2 shadow-lg border border-gray-200 dark:border-gray-700">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{data.name}</p>
+                                        <p className="text-sm text-emerald-600 dark:text-emerald-400">{data.value}표</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
                               <Legend
                                 verticalAlign="bottom"
                                 height={36}
@@ -616,29 +629,30 @@ export default function VotePage({ params }: PageProps) {
             <CardContent className="space-y-4">
               {/* Comment Form Card */}
               <form onSubmit={handleCommentSubmit}>
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                    <Input
-                      value={commentNickname}
-                      onChange={(e) => setCommentNickname(e.target.value)}
-                      placeholder={t.nicknamePlaceholder}
-                      className="pl-9 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-                  <div className="flex gap-2">
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
+                  <div className="flex gap-2 items-center">
+                    <div className="relative w-28 flex-shrink-0">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                      <Input
+                        value={commentNickname}
+                        onChange={(e) => setCommentNickname(e.target.value)}
+                        placeholder={t.nicknamePlaceholder}
+                        className="pl-8 text-sm bg-white dark:bg-gray-900 h-9"
+                      />
+                    </div>
                     <Input
                       value={commentContent}
                       onChange={(e) => setCommentContent(e.target.value)}
                       placeholder={t.commentPlaceholder}
-                      className="flex-1 bg-white dark:bg-gray-900"
+                      className="flex-1 bg-white dark:bg-gray-900 h-9"
                     />
                     <Button
                       type="submit"
                       disabled={!commentContent.trim() || isSubmittingComment}
-                      className="bg-emerald-600 hover:bg-emerald-700"
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 h-9"
                     >
-                      <Send size={16} />
+                      <Send size={14} />
                     </Button>
                   </div>
                 </div>
@@ -658,14 +672,19 @@ export default function VotePage({ params }: PageProps) {
                       className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                          {comment.nickname}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                            <User size={14} className="text-gray-500 dark:text-gray-400" />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {comment.nickname || t.anonymous}
+                          </span>
+                        </div>
                         <span className="text-xs text-gray-400">
                           {formatTimeAgo(comment.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed pl-8">
                         {comment.content}
                       </p>
                     </div>

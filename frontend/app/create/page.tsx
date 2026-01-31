@@ -71,13 +71,8 @@ export default function CreatePage() {
     }
   };
 
-  const handleTagCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+  const handleTagCompositionEnd = () => {
     setIsComposing(false);
-    const value = e.currentTarget.value.trim();
-    if (value && !tags.includes(value) && tags.length < 5 && value.length <= 20) {
-      setTags([...tags, value]);
-      setTagInput("");
-    }
   };
 
   const removeTag = (tagToRemove: string) => {
