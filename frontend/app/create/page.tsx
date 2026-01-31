@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type SyntheticEvent, type KeyboardEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, ChevronDown, X } from "lucide-react";
 
@@ -10,8 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 
 export default function CreatePage() {
@@ -22,6 +20,7 @@ export default function CreatePage() {
   const [options, setOptions] = useState(["", ""]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
   const [expiresIn, setExpiresIn] = useState("24");
   const [password, setPassword] = useState("");
   const [allowMultiple, setAllowMultiple] = useState(false);
@@ -46,8 +45,8 @@ export default function CreatePage() {
     setOptions(newOptions);
   };
 
-  const handleTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isComposing) {
       e.preventDefault();
       const trimmedTag = tagInput.trim();
 
@@ -69,6 +68,15 @@ export default function CreatePage() {
 
       setTagInput("");
       setError("");
+    }
+  };
+
+  const handleTagCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    setIsComposing(false);
+    const value = e.currentTarget.value.trim();
+    if (value && !tags.includes(value) && tags.length < 5 && value.length <= 20) {
+      setTags([...tags, value]);
+      setTagInput("");
     }
   };
 
@@ -140,7 +148,7 @@ export default function CreatePage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.questionLabel}</label>
-                <Textarea
+                <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={t.questionPlaceholder}
@@ -193,6 +201,8 @@ export default function CreatePage() {
                 <Input
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={handleTagCompositionEnd}
                   onKeyDown={handleTagKeyDown}
                   placeholder={t.tagsPlaceholder}
                   disabled={tags.length >= 5}
@@ -214,24 +224,6 @@ export default function CreatePage() {
                 )}
               </div>
 
-              <Separator />
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {t.expiresOptions.map((time) => (
-                    <Button
-                      key={time.value}
-                      type="button"
-                      variant={expiresIn === time.value ? "dark" : "secondary"}
-                      onClick={() => setExpiresIn(time.value)}
-                    >
-                      {time.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
               <div className="space-y-3">
                 <button
                   type="button"
@@ -247,16 +239,6 @@ export default function CreatePage() {
 
                 {showAdvanced && (
                   <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
-                      <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder={t.passwordPlaceholder}
-                      />
-                    </div>
-
                     <div className="flex items-center justify-between py-2">
                       <div className="flex-1">
                         <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
@@ -307,6 +289,31 @@ export default function CreatePage() {
                           }`}
                         />
                       </button>
+                    </div>
+
+                    {isPrivate && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={t.passwordPlaceholder}
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
+                      <select
+                        value={expiresIn}
+                        onChange={(e) => setExpiresIn(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      >
+                        {t.expiresOptions.map((time) => (
+                          <option key={time.value} value={time.value}>{time.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
