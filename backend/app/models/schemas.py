@@ -15,6 +15,7 @@ class RoomCreate(BaseModel):
     ttl: int = 3600
     tags: list[str] = []
     allow_multiple: bool = False
+    is_private: bool = False
 
     @field_validator('options')
     @classmethod
@@ -59,6 +60,7 @@ class RoomSummary(BaseModel):
     expires_at: str
     has_password: bool
     allow_multiple: bool
+    is_private: bool
 
 
 class RoomListResponse(BaseModel):
@@ -67,3 +69,32 @@ class RoomListResponse(BaseModel):
     page: int
     page_size: int
     has_next: bool
+
+
+class CommentCreate(BaseModel):
+    content: str
+    nickname: str | None = None
+
+    @field_validator('content')
+    @classmethod
+    def validate_content(cls, v):
+        if len(v.strip()) < 1:
+            raise ValueError('댓글 내용을 입력해주세요')
+        if len(v) > 500:
+            raise ValueError('댓글은 500자 이내여야 합니다')
+        return v.strip()
+
+    @field_validator('nickname')
+    @classmethod
+    def validate_nickname(cls, v):
+        if v and len(v) > 20:
+            raise ValueError('닉네임은 20자 이내여야 합니다')
+        return v.strip() if v else None
+
+
+class Comment(BaseModel):
+    id: str
+    room_uuid: str
+    content: str
+    nickname: str
+    created_at: str
