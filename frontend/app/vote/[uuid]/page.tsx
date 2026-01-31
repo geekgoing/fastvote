@@ -46,8 +46,15 @@ export default function VotePage({ params }: PageProps) {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const [viewMode, setViewMode] = useState<'bar' | 'pie'>('bar');
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+  // Toast helper
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => setToast({ message: '', visible: false }), 2500);
+  };
 
   // Initial room fetch
   useEffect(() => {
@@ -177,6 +184,7 @@ export default function VotePage({ params }: PageProps) {
     try {
       await api.vote(uuid, [selectedOption], fingerprint);
       setState('voted');
+      showToast(t.voteCompleted);
     } catch (err) {
       if (err instanceof APIError && err.status === 409) {
         setVoteError(t.voteErrors.alreadyVoted);
@@ -192,6 +200,7 @@ export default function VotePage({ params }: PageProps) {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopySuccess(true);
+      showToast(t.copied);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
@@ -454,26 +463,26 @@ export default function VotePage({ params }: PageProps) {
                       <button
                         onClick={() => setViewMode('bar')}
                         className={
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors" +
+                          "flex items-center justify-center w-9 h-9 rounded transition-colors" +
                           (viewMode === 'bar'
                             ? " bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                            : " text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
+                            : " text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
                         }
+                        title={t.barView}
                       >
-                        <BarChart3 size={16} />
-                        {t.barView}
+                        <BarChart3 size={18} />
                       </button>
                       <button
                         onClick={() => setViewMode('pie')}
                         className={
-                          "flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors" +
+                          "flex items-center justify-center w-9 h-9 rounded transition-colors" +
                           (viewMode === 'pie'
                             ? " bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                            : " text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
+                            : " text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
                         }
+                        title={t.pieView}
                       >
-                        <PieChartIcon size={16} />
-                        {t.pieView}
+                        <PieChartIcon size={18} />
                       </button>
                     </div>
                   </div>
@@ -586,6 +595,16 @@ export default function VotePage({ params }: PageProps) {
             </CardContent>
           </Card>
 
+          {/* Toast */}
+          {toast.visible && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="flex items-center gap-2 rounded-full bg-gray-900 dark:bg-gray-100 px-5 py-3 text-sm font-medium text-white dark:text-gray-900 shadow-lg">
+                <Check size={16} className="text-emerald-400 dark:text-emerald-600" />
+                {toast.message}
+              </div>
+            </div>
+          )}
+
           {/* Comments Section */}
           <Card className="mt-6">
             <CardHeader>
@@ -595,31 +614,33 @@ export default function VotePage({ params }: PageProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Comment Form */}
-              <form onSubmit={handleCommentSubmit} className="space-y-3">
-                <div className="flex gap-2">
-                  <div className="relative flex-shrink-0">
+              {/* Comment Form Card */}
+              <form onSubmit={handleCommentSubmit}>
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
+                  <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <Input
                       value={commentNickname}
                       onChange={(e) => setCommentNickname(e.target.value)}
                       placeholder={t.nicknamePlaceholder}
-                      className="pl-9 w-36"
+                      className="pl-9 bg-white dark:bg-gray-900"
                     />
                   </div>
-                  <Input
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    placeholder={t.commentPlaceholder}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!commentContent.trim() || isSubmittingComment}
-                    size="icon"
-                  >
-                    <Send size={16} />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Input
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder={t.commentPlaceholder}
+                      className="flex-1 bg-white dark:bg-gray-900"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={!commentContent.trim() || isSubmittingComment}
+                      className="bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      <Send size={16} />
+                    </Button>
+                  </div>
                 </div>
               </form>
 

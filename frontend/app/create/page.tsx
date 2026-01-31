@@ -2,7 +2,7 @@
 
 import { useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, ChevronDown, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, X, Clock } from "lucide-react";
 
 import { Navbar } from "@/components/site/navbar";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -305,15 +305,19 @@ export default function CreatePage() {
 
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
-                      <select
-                        value={expiresIn}
-                        onChange={(e) => setExpiresIn(e.target.value)}
-                        className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-                      >
-                        {t.expiresOptions.map((time) => (
-                          <option key={time.value} value={time.value}>{time.label}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                        <select
+                          value={expiresIn}
+                          onChange={(e) => setExpiresIn(e.target.value)}
+                          className="w-full appearance-none rounded-xl border border-zinc-200 bg-white pl-11 pr-10 py-3 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 cursor-pointer"
+                        >
+                          {t.expiresOptions.map((time) => (
+                            <option key={time.value} value={time.value}>{time.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
                 )}

@@ -41,7 +41,7 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
     }
 
     const queryString = nextParams.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
   const handleSearchSubmit = (event: React.FormEvent) => {
