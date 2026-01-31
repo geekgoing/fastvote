@@ -15,15 +15,6 @@ type PollsPageProps = {
   };
 };
 
-// Option circle colors
-const OPTION_COLORS = [
-  "bg-yellow-400",
-  "bg-blue-400",
-  "bg-pink-400",
-  "bg-green-400",
-  "bg-purple-400",
-];
-
 export default async function PollsPage({ searchParams }: PollsPageProps) {
   const cookieStore = await cookies();
   const locale = getLocaleFromCookie(cookieStore.get(localeCookieName)?.value);
@@ -97,7 +88,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
             href="/polls"
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               !selectedTag
-                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                ? "bg-emerald-600 text-white dark:bg-emerald-500"
                 : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             }`}
           >
@@ -109,7 +100,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
               href={`/polls?tag=${encodeURIComponent(tag)}${sort !== "latest" ? `&sort=${sort}` : ""}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                 selectedTag === tag
-                  ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                  ? "bg-emerald-600 text-white dark:bg-emerald-500"
                   : "border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
               }`}
             >
@@ -132,10 +123,10 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
               >
                 {/* Bar chart decoration */}
                 <div className="absolute right-4 top-4 flex items-end gap-0.5 opacity-30">
-                  <div className="h-3 w-1.5 rounded-sm bg-violet-400" />
-                  <div className="h-5 w-1.5 rounded-sm bg-violet-400" />
-                  <div className="h-4 w-1.5 rounded-sm bg-violet-400" />
-                  <div className="h-6 w-1.5 rounded-sm bg-violet-400" />
+                  <div className="h-3 w-1.5 rounded-sm bg-emerald-400" />
+                  <div className="h-5 w-1.5 rounded-sm bg-emerald-400" />
+                  <div className="h-4 w-1.5 rounded-sm bg-emerald-400" />
+                  <div className="h-6 w-1.5 rounded-sm bg-emerald-400" />
                 </div>
 
                 {/* Badges */}
@@ -187,24 +178,12 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
                   </span>
                 </div>
 
-                {/* Bottom: Option circles + Link */}
-                <div className="flex items-center justify-between">
-                  {/* Option circles (A, B, C...) */}
-                  <div className="flex -space-x-1">
-                    {Array.from({ length: Math.min(room.tags.length > 0 ? 3 : 2, 5) }, (_, i) => (
-                      <div
-                        key={i}
-                        className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white dark:border-zinc-900 ${OPTION_COLORS[i]}`}
-                      >
-                        {String.fromCharCode(65 + i)}
-                      </div>
-                    ))}
-                  </div>
-
+                {/* Bottom: Link */}
+                <div className="flex items-center justify-end">
                   {/* Action Link */}
                   <Link
                     href={`/vote/${room.uuid}`}
-                    className="flex items-center gap-1 text-sm font-medium text-violet-600 transition-colors hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
+                    className="flex items-center gap-1 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
                   >
                     {room.has_password ? (t.enterPoll || "입장하기") : t.viewPoll}
                     <span className="transition-transform group-hover:translate-x-0.5">→</span>

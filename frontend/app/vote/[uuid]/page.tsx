@@ -4,7 +4,7 @@ import { useEffect, useState, use } from "react";
 import type { SyntheticEvent, ChangeEvent } from "react";
 import Link from "next/link";
 import { Check, Copy, MessageCircle, Send, BarChart3, PieChartIcon, Share2, User } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 import { api, APIError, type VoteRoom, type VoteResults, type Comment } from "@/lib/api";
 import { getFingerprint } from "@/lib/fingerprint";
@@ -346,8 +346,8 @@ export default function VotePage({ params }: PageProps) {
       <div className="min-h-screen bg-white dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto max-w-3xl px-4 py-8">
-          {/* Purple Gradient Header */}
-          <div className="bg-gradient-to-r from-violet-600 to-violet-500 text-white px-6 py-8 rounded-t-2xl relative">
+          {/* Emerald Gradient Header */}
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-8 rounded-t-2xl relative">
             <button
               onClick={handleCopyLink}
               className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -394,15 +394,15 @@ export default function VotePage({ params }: PageProps) {
                         className={
                           "flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all" +
                           (selectedOption === option
-                            ? " border-violet-500 bg-violet-50 dark:bg-violet-500/10"
-                            : " border-gray-200 bg-white hover:border-violet-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-violet-400/40")
+                            ? " border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
+                            : " border-gray-200 bg-white hover:border-emerald-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-emerald-400/40")
                         }
                       >
                         <span
                           className={
                             "flex h-5 w-5 items-center justify-center rounded-full border-2" +
                             (selectedOption === option
-                              ? " border-violet-500 bg-violet-500"
+                              ? " border-emerald-500 bg-emerald-500"
                               : " border-gray-300 bg-white dark:border-gray-600 dark:bg-slate-900")
                           }
                         >
@@ -435,9 +435,9 @@ export default function VotePage({ params }: PageProps) {
                     type="submit"
                     size="lg"
                     disabled={!selectedOption}
-                    className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 disabled:text-gray-500"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500"
                   >
-                    투표하기
+                    {t.submit}
                   </Button>
                 </form>
               )}
@@ -448,7 +448,7 @@ export default function VotePage({ params }: PageProps) {
                   {/* View Toggle */}
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      투표가 완료되었습니다
+                      {t.voteCompleted}
                     </div>
                     <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                       <button
@@ -495,7 +495,7 @@ export default function VotePage({ params }: PageProps) {
                                       {option}
                                     </span>
                                     {isWinner && totalVotes > 1 && (
-                                      <Badge className="bg-violet-600 text-white text-xs px-2 py-0 border-0">
+                                      <Badge className="bg-emerald-600 text-white text-xs px-2 py-0 border-0">
                                         {t.winner}
                                       </Badge>
                                     )}
@@ -509,7 +509,7 @@ export default function VotePage({ params }: PageProps) {
                                     className={
                                       "h-full flex items-center justify-end px-3 transition-all duration-500" +
                                       (isWinner
-                                        ? " bg-gradient-to-r from-violet-500 to-violet-600"
+                                        ? " bg-gradient-to-r from-emerald-500 to-emerald-600"
                                         : " bg-gray-300 dark:bg-gray-600")
                                     }
                                     style={{ width: `${percentage}%` }}
@@ -526,7 +526,7 @@ export default function VotePage({ params }: PageProps) {
                           })}
                         </div>
                       ) : (
-                        <div className="h-80">
+                        <div className="h-96">
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                               <Pie
@@ -535,20 +535,25 @@ export default function VotePage({ params }: PageProps) {
                                   value: results.results[option] || 0,
                                 }))}
                                 cx="50%"
-                                cy="50%"
+                                cy="45%"
                                 innerRadius={60}
                                 outerRadius={100}
                                 paddingAngle={2}
                                 dataKey="value"
-                                label={({ name, percent }) =>
-                                  `${name} (${((percent || 0) * 100).toFixed(0)}%)`
+                                label={({ percent }) =>
+                                  `${((percent || 0) * 100).toFixed(0)}%`
                                 }
                               >
                                 {room.options.map((_, index) => (
-                                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                               </Pie>
-                              <Tooltip />
+                              <Tooltip formatter={(value) => [`${value ?? 0}표`, '득표수']} />
+                              <Legend
+                                verticalAlign="bottom"
+                                height={36}
+                                formatter={(value: string) => <span className="text-sm text-gray-700 dark:text-gray-300">{value}</span>}
+                              />
                             </PieChart>
                           </ResponsiveContainer>
                         </div>
@@ -586,7 +591,7 @@ export default function VotePage({ params }: PageProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-gray-900 dark:text-gray-100">
                 <MessageCircle size={20} />
-                댓글 ({comments.length})
+                {t.comments} ({comments.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">

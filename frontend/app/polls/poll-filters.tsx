@@ -61,7 +61,7 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={labels.searchPlaceholder}
-          className="w-full h-10 rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm placeholder:text-zinc-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+          className="w-full h-10 rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
         />
       </form>
 
@@ -71,7 +71,7 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
         <select
           value={sort}
           onChange={(e) => updateParams({ sort: e.target.value as "latest" | "popular" })}
-          className="h-10 appearance-none rounded-lg border border-zinc-200 bg-white pl-9 pr-8 text-sm text-zinc-700 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+          className="h-10 appearance-none rounded-lg border border-zinc-200 bg-white pl-9 pr-8 text-sm text-zinc-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
         >
           <option value="latest">{labels.sortLatest}</option>
           <option value="popular">{labels.sortPopular}</option>
