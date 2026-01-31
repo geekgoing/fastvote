@@ -19,10 +19,15 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(search);
+  const [currentSort, setCurrentSort] = useState(sort);
 
   useEffect(() => {
     setQuery(search);
   }, [search]);
+
+  useEffect(() => {
+    setCurrentSort(sort);
+  }, [sort]);
 
   const updateParams = (next: { search?: string; sort?: "latest" | "popular" }) => {
     const nextParams = new URLSearchParams(searchParams.toString());
@@ -69,8 +74,12 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
       <div className="relative">
         <SlidersHorizontal size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
         <select
-          value={sort}
-          onChange={(e) => updateParams({ sort: e.target.value as "latest" | "popular" })}
+          value={currentSort}
+          onChange={(e) => {
+            const newSort = e.target.value as "latest" | "popular";
+            setCurrentSort(newSort);
+            updateParams({ sort: newSort });
+          }}
           className="h-10 appearance-none rounded-lg border border-zinc-200 bg-white pl-9 pr-8 text-sm text-zinc-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
         >
           <option value="latest">{labels.sortLatest}</option>

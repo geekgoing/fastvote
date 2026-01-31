@@ -231,6 +231,7 @@ export default function VotePage({ params }: PageProps) {
       });
       setComments([...comments, newComment]);
       setCommentContent('');
+      setCommentNickname('');
     } catch (err) {
       console.error('Failed to submit comment:', err);
     } finally {
@@ -564,7 +565,7 @@ export default function VotePage({ params }: PageProps) {
                                     return (
                                       <div className="rounded-lg bg-white dark:bg-gray-800 px-3 py-2 shadow-lg border border-gray-200 dark:border-gray-700">
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{data.name}</p>
-                                        <p className="text-sm text-emerald-600 dark:text-emerald-400">{data.value}표</p>
+                                        <p className="text-sm text-emerald-600 dark:text-emerald-400">{t.votes(Number(data.value))}</p>
                                       </div>
                                     );
                                   }
@@ -629,17 +630,17 @@ export default function VotePage({ params }: PageProps) {
             <CardContent className="space-y-4">
               {/* Comment Form Card */}
               <form onSubmit={handleCommentSubmit}>
-                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4">
-                  <div className="flex gap-2 items-center">
-                    <div className="relative w-28 flex-shrink-0">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                      <Input
-                        value={commentNickname}
-                        onChange={(e) => setCommentNickname(e.target.value)}
-                        placeholder={t.nicknamePlaceholder}
-                        className="pl-8 text-sm bg-white dark:bg-gray-900 h-9"
-                      />
-                    </div>
+                <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                    <Input
+                      value={commentNickname}
+                      onChange={(e) => setCommentNickname(e.target.value)}
+                      placeholder={t.nicknamePlaceholder}
+                      className="pl-8 text-sm bg-white dark:bg-gray-900 h-9 max-w-[200px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
                     <Input
                       value={commentContent}
                       onChange={(e) => setCommentContent(e.target.value)}

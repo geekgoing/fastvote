@@ -8,11 +8,11 @@ import { getLocaleFromCookie, getMessages, localeCookieName } from "@/lib/i18n";
 import PollFilters from "./poll-filters";
 
 type PollsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     search?: string;
     sort?: string;
     tag?: string;
-  };
+  }>;
 };
 
 export default async function PollsPage({ searchParams }: PollsPageProps) {
@@ -21,9 +21,10 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
   const messages = getMessages(locale);
   const t = messages.polls;
 
-  const search = typeof searchParams?.search === "string" ? searchParams.search : "";
-  const sort = searchParams?.sort === "popular" ? "popular" : "latest";
-  const selectedTag = typeof searchParams?.tag === "string" ? searchParams.tag : "";
+  const params = await searchParams;
+  const search = typeof params?.search === "string" ? params.search : "";
+  const sort = params?.sort === "popular" ? "popular" : "latest";
+  const selectedTag = typeof params?.tag === "string" ? params.tag : "";
 
   let rooms: RoomSummary[] = [];
 
