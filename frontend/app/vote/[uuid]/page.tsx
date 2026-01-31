@@ -3,9 +3,10 @@
 import { useEffect, useState, use } from "react";
 import type { SyntheticEvent, ChangeEvent } from "react";
 import Link from "next/link";
-import { Check, Copy, ShieldCheck } from "lucide-react";
+import { Check, Copy, ShieldCheck, MessageCircle, Send } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-import { api, APIError, type VoteRoom, type VoteResults } from "@/lib/api";
+import { api, APIError, type VoteRoom, type VoteResults, type Comment } from "@/lib/api";
 import { getFingerprint } from "@/lib/fingerprint";
 import { Navbar } from "@/components/site/navbar";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -40,6 +41,13 @@ export default function VotePage({ params }: PageProps) {
   const [copySuccess, setCopySuccess] = useState(false);
   const [shouldConnectWs, setShouldConnectWs] = useState(false);
 
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentContent, setCommentContent] = useState('');
+  const [commentNickname, setCommentNickname] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
   // Initial room fetch
   useEffect(() => {
     const loadRoom = async () => {
@@ -56,6 +64,13 @@ export default function VotePage({ params }: PageProps) {
             setResults(resultsData);
           } catch (err) {
             console.error('Failed to load results:', err);
+          }
+          // Load comments
+          try {
+            const commentsData = await api.getComments(uuid);
+            setComments(commentsData);
+          } catch (err) {
+            console.error('Failed to load comments:', err);
           }
           setState('voting');
           setShouldConnectWs(true);
@@ -132,6 +147,13 @@ export default function VotePage({ params }: PageProps) {
       } catch (err) {
         console.error('Failed to load results:', err);
       }
+      // Load comments
+      try {
+        const commentsData = await api.getComments(uuid);
+        setComments(commentsData);
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+      }
       setState('voting');
       setShouldConnectWs(true);
     } catch (err) {
@@ -184,6 +206,40 @@ export default function VotePage({ params }: PageProps) {
     if (!results || totalVotes === 0) return 0;
     const votes = results.results[option] || 0;
     return (votes / totalVotes) * 100;
+  };
+
+  // Comment submission handler
+  const handleCommentSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!commentContent.trim() || isSubmittingComment) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const newComment = await api.createComment(uuid, {
+        content: commentContent.trim(),
+        nickname: commentNickname.trim() || undefined,
+      });
+      setComments([...comments, newComment]);
+      setCommentContent('');
+    } catch (err) {
+      console.error('Failed to submit comment:', err);
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // Format time ago helper
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+
+    if (diffMins < 1) return t.justNow;
+    if (diffMins < 60) return t.minutesAgo(diffMins);
+    if (diffHours < 24) return t.hoursAgo(diffHours);
+    return date.toLocaleDateString();
   };
 
   // Loading state
@@ -375,36 +431,105 @@ export default function VotePage({ params }: PageProps) {
                 <Separator />
               </CardHeader>
               <CardContent className="space-y-4">
-                {results ? (
-                  room.options.map((option) => {
-                    const votes = results.results[option] || 0;
-                    const percentage = getPercentage(option);
-
-                    return (
-                      <div key={option} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
-                            {option}
-                          </span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {t.voteCount(votes, percentage)}
-                          </span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-zinc-100 dark:bg-white/10">
-                          <div
-                            className="h-2 rounded-full bg-emerald-500 transition-all"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
+                {results && totalVotes > 0 ? (
+                  <>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={room.options.map((option, index) => ({
+                              name: option,
+                              value: results.results[option] || 0,
+                            }))}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={50}
+                            outerRadius={80}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+                            labelLine={false}
+                          >
+                            {room.options.map((_, index) => (
+                              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {room.options.map((option) => {
+                        const votes = results.results[option] || 0;
+                        const percentage = getPercentage(option);
+                        return (
+                          <div key={option} className="flex items-center justify-between text-sm">
+                            <span className="text-zinc-700 dark:text-zinc-300">{option}</span>
+                            <span className="text-zinc-500">{votes}표 ({percentage.toFixed(1)}%)</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   <div className="text-sm text-zinc-400 dark:text-zinc-500">{t.resultsPending}</div>
                 )}
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                <MessageCircle size={20} />
+                {t.commentsTitle} ({comments.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Comment Form */}
+              <form onSubmit={handleCommentSubmit} className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    value={commentNickname}
+                    onChange={(e) => setCommentNickname(e.target.value)}
+                    placeholder={t.nicknamePlaceholder}
+                    className="w-32"
+                  />
+                  <Input
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder={t.commentPlaceholder}
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={!commentContent.trim() || isSubmittingComment}>
+                    <Send size={16} />
+                  </Button>
+                </div>
+              </form>
+
+              {/* Comments List */}
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {comments.length === 0 ? (
+                  <div className="text-sm text-zinc-400 text-center py-4">{t.commentsEmpty}</div>
+                ) : (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                          {comment.nickname}
+                        </span>
+                        <span className="text-xs text-zinc-400">
+                          {formatTimeAgo(comment.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400">{comment.content}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="mt-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
             <Link href="/polls" className="hover:text-emerald-600 dark:hover:text-emerald-300">

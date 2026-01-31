@@ -14,6 +14,7 @@ type PollsPageProps = {
   searchParams?: {
     search?: string;
     sort?: string;
+    tags?: string;
   };
 };
 
@@ -25,6 +26,10 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
 
   const search = typeof searchParams?.search === "string" ? searchParams.search : "";
   const sort = searchParams?.sort === "popular" ? "popular" : "latest";
+  const tagsParam = typeof searchParams?.tags === "string" ? searchParams.tags : "";
+  const tags = tagsParam
+    ? tagsParam.split(",").map((tag) => tag.trim()).filter(Boolean)
+    : [];
 
   let rooms: RoomSummary[] = [];
 
@@ -32,6 +37,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
     const data = await api.listRooms({
       search: search || undefined,
       sort,
+      tags: tags.length > 0 ? tags : undefined,
       page: 1,
       page_size: 30,
     });
@@ -68,6 +74,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
           <PollFilters
             search={search}
             sort={sort}
+            tags={tags}
             labels={{
               searchLabel: t.searchLabel,
               searchPlaceholder: t.searchPlaceholder,
@@ -75,6 +82,9 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
               sortLabel: t.sortLabel,
               sortLatest: t.sortLatest,
               sortPopular: t.sortPopular,
+              tagFilterLabel: t.tagFilterLabel,
+              tagFilterPlaceholder: t.tagFilterPlaceholder,
+              clearFilters: t.clearFilters,
             }}
           />
         </div>
