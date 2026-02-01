@@ -1,7 +1,17 @@
 // FastVote API Client
 // Centralized API communication with type safety
 
-const API_URL = '/api';
+function getApiUrl(): string {
+  // Server-side: always use BACKEND_URL
+  if (typeof window === 'undefined') {
+    return `${process.env.BACKEND_URL || 'http://localhost:8000'}/api`;
+  }
+  // Client-side: local dev uses BACKEND_URL, production uses /api (ingress)
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  return backendUrl ? `${backendUrl}/api` : '/api';
+}
+
+const API_URL = getApiUrl();
 
 // WebSocket URL derived from current page location
 function getWsUrl(): string {
