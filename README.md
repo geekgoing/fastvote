@@ -52,6 +52,7 @@
 
 ## 아키텍처
 
+### 로컬 개발
 ```
 ┌─────────────────┐     WebSocket      ┌─────────────────┐
 │                 │◄──────────────────►│                 │
@@ -60,13 +61,29 @@
 │   Port: 3000    │                    │   Port: 8000    │
 └─────────────────┘                    └────────┬────────┘
                                                 │
-                                                │
                                        ┌────────▼────────┐
-                                       │                 │
                                        │      Redis      │
                                        │   Port: 6379    │
-                                       │                 │
                                        └─────────────────┘
+```
+
+### Kubernetes (k3s + ArgoCD)
+```
+                    ┌─────────────────────────────────────┐
+                    │            Ingress                  │
+    Browser ───────►│  /api/* /ws/* → backend:8000       │
+                    │  /*           → frontend:3000       │
+                    └───────────────┬─────────────────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              │                     │                     │
+              ▼                     ▼                     ▼
+     ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+     │    Frontend     │   │     Backend     │   │      Redis      │
+     │   (Next.js)     │   │   (FastAPI)     │   │     (alpine)    │
+     └─────────────────┘   └────────┬────────┘   └─────────────────┘
+                                    │                     ▲
+                                    └─────────────────────┘
 ```
 
 ---
@@ -113,14 +130,14 @@ npm run dev
 
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| `POST` | `/rooms` | 투표방 생성 |
-| `GET` | `/rooms` | 투표방 목록 조회 |
-| `GET` | `/rooms/{uuid}` | 투표방 정보 조회 |
-| `POST` | `/rooms/{uuid}/verify` | 비밀방 비밀번호 검증 |
-| `POST` | `/rooms/{uuid}/vote` | 투표 제출 |
-| `GET` | `/rooms/{uuid}/results` | 투표 결과 조회 |
-| `POST` | `/rooms/{uuid}/comments` | 댓글 작성 |
-| `GET` | `/rooms/{uuid}/comments` | 댓글 목록 조회 |
+| `POST` | `/api/rooms` | 투표방 생성 |
+| `GET` | `/api/rooms` | 투표방 목록 조회 |
+| `GET` | `/api/rooms/{uuid}` | 투표방 정보 조회 |
+| `POST` | `/api/rooms/{uuid}/verify` | 비밀방 비밀번호 검증 |
+| `POST` | `/api/rooms/{uuid}/vote` | 투표 제출 |
+| `GET` | `/api/rooms/{uuid}/results` | 투표 결과 조회 |
+| `POST` | `/api/rooms/{uuid}/comments` | 댓글 작성 |
+| `GET` | `/api/rooms/{uuid}/comments` | 댓글 목록 조회 |
 | `WS` | `/ws/rooms/{uuid}` | 실시간 결과 구독 |
 
 ---

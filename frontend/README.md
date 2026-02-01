@@ -100,12 +100,14 @@ frontend/
 - **차트 시각화**: 막대/원형 그래프로 결과 표시
 - **투표 효과**: 투표 완료 시 confetti 효과
 
-## 환경 변수
+## API 연동
 
-| 변수 | 설명 | 기본값 |
-|------|------|--------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:8000` |
-| `NEXT_PUBLIC_WS_URL` | WebSocket URL | `ws://localhost:8000` |
+프로덕션 환경에서는 Ingress가 path 기반으로 라우팅합니다:
+- `/api/*` → backend (REST API)
+- `/ws/*` → backend (WebSocket)
+- `/*` → frontend
+
+환경 변수 없이 상대 경로(`/api`)로 API 호출합니다.
 
 ## 스크립트
 

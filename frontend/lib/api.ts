@@ -1,8 +1,14 @@
 // FastVote API Client
 // Centralized API communication with type safety
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-const WS_URL = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+const API_URL = '/api';
+
+// WebSocket URL derived from current page location
+function getWsUrl(): string {
+  if (typeof window === 'undefined') return 'ws://localhost:8000';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}`;
+}
 
 export interface VoteRoom {
   uuid: string;
@@ -175,5 +181,5 @@ export const api = {
     fetchAPI<Comment[]>(`/rooms/${uuid}/comments`),
 
   // WebSocket URL for real-time updates
-  getWebSocketUrl: (uuid: string) => `${WS_URL}/ws/rooms/${uuid}`,
+  getWebSocketUrl: (uuid: string) => `${getWsUrl()}/ws/rooms/${uuid}`,
 };

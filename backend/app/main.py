@@ -25,6 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(health.router)
-app.include_router(rooms.router)
-app.include_router(websocket.router)
+app.include_router(health.router, prefix="/api")
+app.include_router(rooms.router, prefix="/api")
+app.include_router(websocket.router)  # /ws/* stays at root

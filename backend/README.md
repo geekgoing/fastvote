@@ -62,18 +62,23 @@ backend/
 ### 투표방
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| `POST` | `/rooms` | 투표방 생성 |
-| `GET` | `/rooms` | 투표방 목록 조회 |
-| `GET` | `/rooms/{uuid}` | 투표방 상세 조회 |
-| `POST` | `/rooms/{uuid}/verify` | 비밀번호 검증 |
-| `POST` | `/rooms/{uuid}/vote` | 투표 제출 |
-| `GET` | `/rooms/{uuid}/results` | 투표 결과 조회 |
+| `POST` | `/api/rooms` | 투표방 생성 |
+| `GET` | `/api/rooms` | 투표방 목록 조회 |
+| `GET` | `/api/rooms/{uuid}` | 투표방 상세 조회 |
+| `POST` | `/api/rooms/{uuid}/verify` | 비밀번호 검증 |
+| `POST` | `/api/rooms/{uuid}/vote` | 투표 제출 |
+| `GET` | `/api/rooms/{uuid}/results` | 투표 결과 조회 |
 
 ### 댓글
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| `POST` | `/rooms/{uuid}/comments` | 댓글 작성 |
-| `GET` | `/rooms/{uuid}/comments` | 댓글 목록 조회 |
+| `POST` | `/api/rooms/{uuid}/comments` | 댓글 작성 |
+| `GET` | `/api/rooms/{uuid}/comments` | 댓글 목록 조회 |
+
+### 헬스체크
+| Method | Endpoint | 설명 |
+|--------|----------|------|
+| `GET` | `/api/health` | 서버 상태 확인 |
 
 ### WebSocket
 | Endpoint | 설명 |
@@ -122,3 +127,10 @@ voted:{uuid}:{fingerprint} = "1"
 ## API 문서
 
 서버 실행 후 http://localhost:8000/docs 에서 Swagger UI로 확인 가능
+
+## 배포
+
+Kubernetes 환경에서는 Ingress가 path 기반으로 라우팅:
+- `/api/*` → backend
+- `/ws/*` → backend
+- `/*` → frontend
