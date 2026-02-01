@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# build outputs
+.next/
+out/
+
+# env & secrets
+.env
+.env.*
+.vercel
+
+# vcs
+.git
+.gitignore
+
+# misc
+README.md
+npm-debug.log
