@@ -3,8 +3,9 @@
 import { useEffect, useState, use } from "react";
 import type { SyntheticEvent, ChangeEvent } from "react";
 import Link from "next/link";
-import { Check, Copy, MessageCircle, Send, BarChart3, PieChartIcon, Share2, User } from "lucide-react";
+import { ArrowLeft, Check, MessageCircle, Send, BarChart3, PieChartIcon, Share2, User } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import confetti from 'canvas-confetti';
 
 import { api, APIError, type VoteRoom, type VoteResults, type Comment } from "@/lib/api";
 import { getFingerprint } from "@/lib/fingerprint";
@@ -23,7 +24,7 @@ type ViewState = 'loading' | 'password' | 'voting' | 'voted' | 'error';
 
 export default function VotePage({ params }: PageProps) {
   const { uuid } = use(params);
-  const { messages } = useLocale();
+  const { locale, messages } = useLocale();
   const t = messages.vote;
 
   const [state, setState] = useState<ViewState>('loading');
@@ -34,7 +35,7 @@ export default function VotePage({ params }: PageProps) {
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const [selectedOption, setSelectedOption] = useState<string>('');
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [voteError, setVoteError] = useState('');
 
   const [copySuccess, setCopySuccess] = useState(false);
@@ -176,15 +177,22 @@ export default function VotePage({ params }: PageProps) {
   // Vote submission
   const handleVoteSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedOption) return;
+    if (selectedOptions.length === 0) return;
 
     setVoteError('');
     const fingerprint = getFingerprint();
 
     try {
-      await api.vote(uuid, [selectedOption], fingerprint);
+      await api.vote(uuid, selectedOptions, fingerprint);
       setState('voted');
       showToast(t.voteCompleted);
+      // Confetti effect
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
+      });
     } catch (err) {
       if (err instanceof APIError && err.status === 409) {
         setVoteError(t.voteErrors.alreadyVoted);
@@ -251,6 +259,15 @@ export default function VotePage({ params }: PageProps) {
     if (diffMins < 60) return t.minutesAgo(diffMins);
     if (diffHours < 24) return t.hoursAgo(diffHours);
     return date.toLocaleDateString();
+  };
+
+  // Calculate hours until expiration
+  const getExpirationHours = (expiresAt: string): number => {
+    const expires = new Date(expiresAt);
+    const now = new Date();
+    const diffMs = expires.getTime() - now.getTime();
+    const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+    return Math.max(1, hours);
   };
 
   // Loading state
@@ -334,18 +351,21 @@ export default function VotePage({ params }: PageProps) {
     );
   }
 
-  // Helper to find winner option
+  // Helper to find winner option (returns null if tied)
   const getWinnerOption = (): string | null => {
     if (!results || totalVotes === 0) return null;
-    let maxVotes = -1;
-    let winner: string | null = null;
-    Object.entries(results.results).forEach(([option, votes]) => {
-      if (votes > maxVotes) {
-        maxVotes = votes;
-        winner = option;
-      }
-    });
-    return winner;
+    const entries = Object.entries(results.results);
+    if (entries.length === 0) return null;
+
+    // Sort by votes descending
+    const sorted = entries.sort((a, b) => b[1] - a[1]);
+    const maxVotes = sorted[0][1];
+
+    // Check if there's a tie for first place
+    const topOptions = sorted.filter(([, votes]) => votes === maxVotes);
+    if (topOptions.length > 1) return null; // Tie - no winner
+
+    return sorted[0][0];
   };
 
   // Voting/Results state
@@ -353,40 +373,73 @@ export default function VotePage({ params }: PageProps) {
     const winnerOption = getWinnerOption();
 
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
         <div className="mx-auto max-w-3xl px-4 py-8">
+          {/* Back to List */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-fit mb-4"
+            onClick={() => window.location.href = "/polls"}
+          >
+            <ArrowLeft size={16} /> {t.backToList}
+          </Button>
+
           {/* Emerald Gradient Header */}
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-8 rounded-t-2xl relative">
-            <button
-              onClick={handleCopyLink}
-              className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-lg transition-colors"
-              title={copySuccess ? t.copied : t.copyLink}
-            >
-              {copySuccess ? <Check size={20} /> : <Copy size={20} />}
-            </button>
-
             {room.has_password && (
               <Badge className="bg-white/20 text-white border-0 mb-3 hover:bg-white/30">
-                🔒 비공개
+                🔒 {t.privateBadge}
               </Badge>
             )}
             <h1 className="text-2xl font-bold mb-3 pr-12">{room.title}</h1>
-            <div className="flex items-center gap-3 text-sm text-white/90">
-              <span>총 {totalVotes}명 참여</span>
-              <span>•</span>
-              <span>{room.expires_at ? "만료 예정" : t.unlimited}</span>
-              {room.tags && room.tags.length > 0 && (
-                <>
-                  <span>•</span>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {room.tags.map(tag => (
-                      <span key={tag} className="bg-white/20 px-2 py-0.5 rounded text-xs">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm text-white/90 flex-wrap">
+                <span>{t.totalVotes(totalVotes)}</span>
+                <span>•</span>
+                <span>{room.expires_at ? t.expiresIn(getExpirationHours(room.expires_at)) : t.unlimited}</span>
+                {room.tags && room.tags.length > 0 && (
+                  <>
+                    <span>•</span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {room.tags.map(tag => (
+                        <span key={tag} className="bg-white/20 px-2 py-0.5 rounded text-xs">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Chart Toggle - visible only when voted */}
+              {state === "voted" && (
+                <div className="flex gap-1 bg-white/20 p-1 rounded-lg ml-4">
+                  <button
+                    onClick={() => setViewMode('bar')}
+                    className={
+                      "flex items-center justify-center w-8 h-8 rounded transition-colors" +
+                      (viewMode === 'bar'
+                        ? " bg-white text-emerald-600"
+                        : " text-white/70 hover:text-white hover:bg-white/10")
+                    }
+                    title={t.barView}
+                  >
+                    <BarChart3 size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('pie')}
+                    className={
+                      "flex items-center justify-center w-8 h-8 rounded transition-colors" +
+                      (viewMode === 'pie'
+                        ? " bg-white text-emerald-600"
+                        : " text-white/70 hover:text-white hover:bg-white/10")
+                    }
+                    title={t.pieView}
+                  >
+                    <PieChartIcon size={16} />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -398,41 +451,58 @@ export default function VotePage({ params }: PageProps) {
               {state === "voting" && (
                 <form onSubmit={handleVoteSubmit} className="space-y-4">
                   <div className="space-y-3">
-                    {room.options.map((option) => (
-                      <label
-                        key={option}
-                        className={
-                          "flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all" +
-                          (selectedOption === option
-                            ? " border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                            : " border-gray-200 bg-white hover:border-emerald-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-emerald-400/40")
+                    {room.options.map((option) => {
+                      const isSelected = selectedOptions.includes(option);
+                      const handleToggle = () => {
+                        if (room.allow_multiple) {
+                          setSelectedOptions(prev =>
+                            prev.includes(option)
+                              ? prev.filter(o => o !== option)
+                              : [...prev, option]
+                          );
+                        } else {
+                          setSelectedOptions([option]);
                         }
-                      >
-                        <span
+                      };
+                      return (
+                        <label
+                          key={option}
                           className={
-                            "flex h-5 w-5 items-center justify-center rounded-full border-2" +
-                            (selectedOption === option
-                              ? " border-emerald-500 bg-emerald-500"
-                              : " border-gray-300 bg-white dark:border-gray-600 dark:bg-slate-900")
+                            "flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all" +
+                            (isSelected
+                              ? " border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
+                              : " border-gray-200 bg-white hover:border-emerald-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-emerald-400/40")
                           }
                         >
-                          {selectedOption === option && (
-                            <span className="h-2 w-2 rounded-full bg-white" />
-                          )}
-                        </span>
-                        <span className="text-base font-medium text-gray-900 dark:text-gray-100 flex-1">
-                          {option}
-                        </span>
-                        <input
-                          type="radio"
-                          name="vote"
-                          value={option}
-                          checked={selectedOption === option}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => setSelectedOption(e.target.value)}
-                          className="sr-only"
-                        />
-                      </label>
-                    ))}
+                          <span
+                            className={
+                              "flex h-5 w-5 items-center justify-center border-2" +
+                              (room.allow_multiple ? " rounded" : " rounded-full") +
+                              (isSelected
+                                ? " border-emerald-500 bg-emerald-500"
+                                : " border-gray-300 bg-white dark:border-gray-600 dark:bg-slate-900")
+                            }
+                          >
+                            {isSelected && (
+                              room.allow_multiple
+                                ? <Check size={12} className="text-white" />
+                                : <span className="h-2 w-2 rounded-full bg-white" />
+                            )}
+                          </span>
+                          <span className="text-base font-medium text-gray-900 dark:text-gray-100 flex-1">
+                            {option}
+                          </span>
+                          <input
+                            type={room.allow_multiple ? "checkbox" : "radio"}
+                            name="vote"
+                            value={option}
+                            checked={isSelected}
+                            onChange={handleToggle}
+                            className="sr-only"
+                          />
+                        </label>
+                      );
+                    })}
                   </div>
 
                   {voteError && (
@@ -444,7 +514,7 @@ export default function VotePage({ params }: PageProps) {
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={!selectedOption}
+                    disabled={selectedOptions.length === 0}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500"
                   >
                     {t.submit}
@@ -452,42 +522,9 @@ export default function VotePage({ params }: PageProps) {
                 </form>
               )}
 
-              {/* VOTED STATE - Show results with view toggle */}
+              {/* VOTED STATE - Show results */}
               {state === "voted" && (
-                <div className="space-y-6">
-                  {/* View Toggle */}
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {t.voteCompleted}
-                    </div>
-                    <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                      <button
-                        onClick={() => setViewMode('bar')}
-                        className={
-                          "flex items-center justify-center w-9 h-9 rounded transition-colors" +
-                          (viewMode === 'bar'
-                            ? " bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                            : " text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
-                        }
-                        title={t.barView}
-                      >
-                        <BarChart3 size={18} />
-                      </button>
-                      <button
-                        onClick={() => setViewMode('pie')}
-                        className={
-                          "flex items-center justify-center w-9 h-9 rounded transition-colors" +
-                          (viewMode === 'pie'
-                            ? " bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
-                            : " text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200")
-                        }
-                        title={t.pieView}
-                      >
-                        <PieChartIcon size={18} />
-                      </button>
-                    </div>
-                  </div>
-
+                <div className="space-y-4">
                   {/* Results Display */}
                   {results && totalVotes > 0 ? (
                     <>
@@ -498,37 +535,33 @@ export default function VotePage({ params }: PageProps) {
                             const percentage = getPercentage(option);
                             const isWinner = option === winnerOption;
                             return (
-                              <div key={option} className="space-y-1.5">
-                                <div className="flex items-center justify-between text-sm">
+                              <div key={option} className="h-12 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden relative">
+                                {/* Background bar */}
+                                <div
+                                  className={
+                                    "absolute inset-y-0 left-0 transition-all duration-500" +
+                                    (isWinner
+                                      ? " bg-gradient-to-r from-emerald-500 to-emerald-600"
+                                      : " bg-gray-300 dark:bg-gray-600")
+                                  }
+                                  style={{ width: `${percentage}%` }}
+                                />
+                                {/* Content overlay */}
+                                <div className="relative h-full flex items-center justify-between px-4">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                       {option}
                                     </span>
-                                    {isWinner && totalVotes > 1 && (
-                                      <Badge className="bg-emerald-600 text-white text-xs px-2 py-0 border-0">
+                                    {isWinner && (
+                                      <span className="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-xs font-bold">
                                         {t.winner}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <span className="text-gray-600 dark:text-gray-400">
-                                    {votes}표 · {percentage.toFixed(1)}%
-                                  </span>
-                                </div>
-                                <div className="h-10 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
-                                  <div
-                                    className={
-                                      "h-full flex items-center justify-end px-3 transition-all duration-500" +
-                                      (isWinner
-                                        ? " bg-gradient-to-r from-emerald-500 to-emerald-600"
-                                        : " bg-gray-300 dark:bg-gray-600")
-                                    }
-                                    style={{ width: `${percentage}%` }}
-                                  >
-                                    {percentage > 10 && (
-                                      <span className="text-sm font-semibold text-white">
-                                        {percentage.toFixed(0)}%
                                       </span>
                                     )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <span>{percentage.toFixed(0)}%</span>
+                                    <span className="text-gray-400">·</span>
+                                    <span>{t.votes(votes)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -550,9 +583,6 @@ export default function VotePage({ params }: PageProps) {
                                 outerRadius={100}
                                 paddingAngle={2}
                                 dataKey="value"
-                                label={({ percent }) =>
-                                  `${((percent || 0) * 100).toFixed(0)}%`
-                                }
                               >
                                 {room.options.map((_, index) => (
                                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -562,10 +592,14 @@ export default function VotePage({ params }: PageProps) {
                                 content={({ active, payload }) => {
                                   if (active && payload && payload.length) {
                                     const data = payload[0];
+                                    const value = Number(data.value);
+                                    const percent = totalVotes > 0 ? (value / totalVotes) * 100 : 0;
                                     return (
                                       <div className="rounded-lg bg-white dark:bg-gray-800 px-3 py-2 shadow-lg border border-gray-200 dark:border-gray-700">
                                         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{data.name}</p>
-                                        <p className="text-sm text-emerald-600 dark:text-emerald-400">{t.votes(Number(data.value))}</p>
+                                        <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                                          {t.votes(value)} · {percent.toFixed(0)}%
+                                        </p>
                                       </div>
                                     );
                                   }
@@ -631,13 +665,15 @@ export default function VotePage({ params }: PageProps) {
               {/* Comment Form Card */}
               <form onSubmit={handleCommentSubmit}>
                 <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                      <User size={16} className="text-gray-500 dark:text-gray-400" />
+                    </div>
                     <Input
                       value={commentNickname}
                       onChange={(e) => setCommentNickname(e.target.value)}
                       placeholder={t.nicknamePlaceholder}
-                      className="pl-8 text-sm bg-white dark:bg-gray-900 h-9 max-w-[200px]"
+                      className="text-sm bg-white dark:bg-gray-900 h-9 max-w-[200px]"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -660,7 +696,7 @@ export default function VotePage({ params }: PageProps) {
               </form>
 
               {/* Comments List */}
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div key={locale} className="space-y-3">
                 {comments.length === 0 ? (
                   <div className="text-center py-8 text-gray-400 dark:text-gray-500">
                     <MessageCircle size={32} className="mx-auto mb-2 opacity-30" />
@@ -670,12 +706,12 @@ export default function VotePage({ params }: PageProps) {
                   comments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700"
+                      className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                            <User size={14} className="text-gray-500 dark:text-gray-400" />
+                          <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                            <User size={14} className="text-emerald-600 dark:text-emerald-400" />
                           </div>
                           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                             {comment.nickname || t.anonymous}
@@ -685,7 +721,7 @@ export default function VotePage({ params }: PageProps) {
                           {formatTimeAgo(comment.created_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed pl-8">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                         {comment.content}
                       </p>
                     </div>

@@ -2,11 +2,10 @@
 
 import { useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, ChevronDown, X, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, X, CheckSquare, Lock, Calendar } from "lucide-react";
 
 import { Navbar } from "@/components/site/navbar";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -129,7 +128,6 @@ export default function CreatePage() {
             <ArrowLeft size={16} /> {t.backHome}
           </Button>
           <div>
-            <Badge className="mb-3">{t.badge}</Badge>
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{t.title}</h1>
             <p className="mt-2 text-zinc-500 dark:text-zinc-300">{t.description}</p>
           </div>
@@ -183,7 +181,7 @@ export default function CreatePage() {
                     </div>
                   ))}
                 </div>
-                <Button type="button" variant="outline" onClick={addOption}>
+                <Button type="button" variant="outline" onClick={addOption} className="w-full">
                   <Plus size={16} /> {t.addOption}
                 </Button>
               </div>
@@ -232,21 +230,29 @@ export default function CreatePage() {
                   />
                 </button>
 
-                {showAdvanced && (
-                  <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    showAdvanced ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                     <div className="flex items-center justify-between py-2">
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                          {t.allowMultipleLabel}
-                        </div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          {t.allowMultipleHint}
+                      <div className="flex items-start gap-3 flex-1">
+                        <CheckSquare size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.allowMultipleLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.allowMultipleHint}
+                          </div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setAllowMultiple(!allowMultiple)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
                           allowMultiple
                             ? "bg-emerald-600 dark:bg-emerald-500"
                             : "bg-zinc-300 dark:bg-zinc-700"
@@ -261,18 +267,21 @@ export default function CreatePage() {
                     </div>
 
                     <div className="flex items-center justify-between py-2">
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
-                          {t.isPrivateLabel}
-                        </div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          {t.isPrivateHint}
+                      <div className="flex items-start gap-3 flex-1">
+                        <Lock size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.isPrivateLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.isPrivateHint}
+                          </div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsPrivate(!isPrivate)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
                           isPrivate
                             ? "bg-emerald-600 dark:bg-emerald-500"
                             : "bg-zinc-300 dark:bg-zinc-700"
@@ -287,7 +296,7 @@ export default function CreatePage() {
                     </div>
 
                     {isPrivate && (
-                      <div className="space-y-2">
+                      <div className="space-y-2 pl-8">
                         <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
                         <Input
                           type="password"
@@ -298,24 +307,34 @@ export default function CreatePage() {
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
-                      <div className="relative">
-                        <Clock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <Calendar size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.expiresLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.expiresHint}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="relative shrink-0">
                         <select
                           value={expiresIn}
                           onChange={(e) => setExpiresIn(e.target.value)}
-                          className="w-full appearance-none rounded-xl border border-zinc-200 bg-white pl-11 pr-10 py-3 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 cursor-pointer"
+                          className="appearance-none rounded-lg border border-zinc-200 bg-white pl-3 pr-8 py-2 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 cursor-pointer"
                         >
                           {t.expiresOptions.map((time) => (
                             <option key={time.value} value={time.value}>{time.label}</option>
                           ))}
                         </select>
-                        <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+                </div>
               </div>
 
               {error && (

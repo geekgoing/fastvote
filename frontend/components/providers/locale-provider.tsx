@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import {
   defaultLocale,
@@ -15,6 +15,7 @@ type LocaleContextValue = {
   locale: Locale;
   messages: Messages;
   setLocale: (locale: Locale) => void;
+  mounted: boolean;
 };
 
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
@@ -28,6 +29,7 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 export function LocaleProvider({ initialLocale, children }: LocaleProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale ?? defaultLocale);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Sync locale from the cookie on the client (default is ko).
@@ -42,25 +44,26 @@ export function LocaleProvider({ initialLocale, children }: LocaleProviderProps)
     if (cookieLocale && cookieLocale !== locale) {
       setLocaleState(cookieLocale);
     }
-  }, [locale]);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  const setLocale = (nextLocale: Locale) => {
-    if (nextLocale === locale) return;
+  const setLocale = useCallback((nextLocale: Locale) => {
     document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=${ONE_YEAR}; samesite=lax`;
     setLocaleState(nextLocale);
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
       locale,
       messages: getMessages(locale),
       setLocale,
+      mounted,
     }),
-    [locale]
+    [locale, mounted, setLocale]
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

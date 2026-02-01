@@ -20,7 +20,7 @@ async def create_comment(
         "id": comment_id,
         "room_uuid": room_uuid,
         "content": content,
-        "nickname": nickname or "익명",
+        "nickname": nickname or "",
         "created_at": created_at.isoformat(),
     }
 

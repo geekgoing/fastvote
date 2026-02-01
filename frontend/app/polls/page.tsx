@@ -59,7 +59,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         {/* Header */}
@@ -120,7 +120,7 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
             {rooms.map((room) => (
               <div
                 key={room.uuid}
-                className="group relative rounded-2xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+                className="group relative flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
               >
                 {/* Bar chart decoration */}
                 <div className="absolute right-4 top-4 flex items-end gap-0.5 opacity-30">
@@ -130,8 +130,8 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
                   <div className="h-6 w-1.5 rounded-sm bg-emerald-400" />
                 </div>
 
-                {/* Badges */}
-                <div className="mb-4 flex flex-wrap gap-2">
+                {/* Badges - fixed height */}
+                <div className="mb-3 flex min-h-[28px] flex-wrap items-start gap-2">
                   {room.has_password && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
                       <Lock size={12} />
@@ -147,12 +147,12 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
                 </div>
 
                 {/* Title */}
-                <h3 className="mb-3 text-lg font-bold text-zinc-900 dark:text-white">
+                <h3 className="mb-3 line-clamp-2 text-lg font-bold text-zinc-900 dark:text-white">
                   {room.title}
                 </h3>
 
-                {/* Tags */}
-                <div className="mb-4 flex flex-wrap gap-1.5">
+                {/* Tags - fixed height */}
+                <div className="mb-4 flex min-h-[28px] flex-wrap items-start gap-1.5">
                   {room.tags.length > 0 ? (
                     room.tags.slice(0, 3).map((tag) => (
                       <span
@@ -163,25 +163,25 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-zinc-400">{t.noTags}</span>
+                    <span className="py-1 text-xs text-zinc-400">{t.noTags}</span>
                   )}
                 </div>
 
-                {/* Stats */}
-                <div className="mb-5 flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-                  <span className="flex items-center gap-1.5">
-                    <BarChart2 size={14} />
-                    {t.participants(room.total_votes)}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock size={14} />
-                    {formatDate(room.created_at)}
-                  </span>
-                </div>
+                {/* Spacer */}
+                <div className="flex-1" />
 
-                {/* Bottom: Link */}
-                <div className="flex items-center justify-end">
-                  {/* Action Link */}
+                {/* Stats & Action */}
+                <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1.5">
+                      <BarChart2 size={14} />
+                      {t.participants(room.total_votes)}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={14} />
+                      {formatDate(room.created_at)}
+                    </span>
+                  </div>
                   <Link
                     href={`/vote/${room.uuid}`}
                     className="flex items-center gap-1 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"

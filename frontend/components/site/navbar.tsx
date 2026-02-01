@@ -2,16 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Globe } from "lucide-react";
 
 import { useLocale } from "@/components/providers/locale-provider";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { locale, setLocale, messages } = useLocale();
+  const router = useRouter();
+  const { locale, setLocale, messages, mounted } = useLocale();
+
+  const toggleLang = () => {
+    const newLocale = locale === "ko" ? "en" : "ko";
+    setLocale(newLocale);
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/80 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-slate-900/80">
@@ -25,38 +31,18 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Primary navbar links removed per user request. CTAs, locale and theme toggles remain. */}
-
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-1 py-1 shadow-sm shadow-zinc-200/50 dark:border-white/10 dark:bg-slate-900">
-            <Button
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Language & Theme Toggles */}
+          <div className="hidden sm:flex items-center gap-1 mr-2">
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-8 rounded-full px-3 text-xs",
-                locale === "ko" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
-              )}
-              onClick={() => setLocale("ko")}
-              aria-pressed={locale === "ko"}
-              data-testid="locale-ko"
+              onClick={toggleLang}
+              className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold uppercase"
+              title={messages.navbar.languageLabel}
             >
-              KO
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-8 rounded-full px-3 text-xs",
-                locale === "en" && "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
-              )}
-              onClick={() => setLocale("en")}
-              aria-pressed={locale === "en"}
-              data-testid="locale-en"
-            >
-              EN
-            </Button>
+              <Globe size={16} />
+              {mounted ? locale.toUpperCase() : "KO"}
+            </button>
           </div>
 
           <ThemeToggle />
