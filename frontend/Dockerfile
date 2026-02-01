@@ -8,6 +8,9 @@ RUN npm ci
 
 COPY . .
 
+# Backend URL for rewrites (build-time, internal k8s DNS)
+ENV BACKEND_URL=http://fastvote-backend:8000
+
 RUN npm run build
 
 # Production stage (standalone)
