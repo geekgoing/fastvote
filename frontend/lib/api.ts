@@ -13,9 +13,16 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
-// WebSocket URL derived from current page location
+// WebSocket URL: local uses BACKEND_URL, production uses current host
 function getWsUrl(): string {
   if (typeof window === 'undefined') return 'ws://localhost:8000';
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (backendUrl) {
+    // Local dev: use backend URL directly
+    return backendUrl.replace('http://', 'ws://').replace('https://', 'wss://');
+  }
+  // Production: use current host (ingress routes /ws to backend)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}`;
 }
