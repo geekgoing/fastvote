@@ -1,0 +1,27 @@
+{
+  "branches": ["main"],
+  "tagFormat": "backend-v${version}",
+  "plugins": [
+    ["@semantic-release/commit-analyzer", {
+      "preset": "conventionalcommits",
+      "releaseRules": [
+        {"type": "feat", "scope": "backend", "release": "minor"},
+        {"type": "feat", "scope": "backend/*", "release": "minor"},
+        {"type": "fix", "scope": "backend", "release": "patch"},
+        {"type": "fix", "scope": "backend/*", "release": "patch"},
+        {"type": "perf", "scope": "backend", "release": "patch"},
+        {"type": "perf", "scope": "backend/*", "release": "patch"},
+        {"type": "feat", "release": "minor"},
+        {"type": "fix", "release": "patch"},
+        {"type": "perf", "release": "patch"}
+      ]
+    }],
+    ["@semantic-release/release-notes-generator", {
+      "preset": "conventionalcommits"
+    }],
+    ["@semantic-release/github", {
+      "successComment": false,
+      "failCommentCondition": false
+    }]
+  ]
+}

@@ -57,49 +57,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install semantic-release
-        run: npm install -g semantic-release @semantic-release/git @semantic-release/changelog conventional-changelog-conventionalcommits
-
       - name: Semantic Release
         id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            conventional-changelog-conventionalcommits
+          extends: |
+            .github/workflows/.releaserc-backend.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cat > .releaserc.json << 'EOF'
-          {
-            "branches": ["main"],
-            "tagFormat": "backend-v${version}",
-            "plugins": [
-              ["@semantic-release/commit-analyzer", {
-                "preset": "conventionalcommits",
-                "releaseRules": [
-                  {"type": "feat", "scope": "backend", "release": "minor"},
-                  {"type": "feat", "scope": "backend/*", "release": "minor"},
-                  {"type": "fix", "scope": "backend", "release": "patch"},
-                  {"type": "fix", "scope": "backend/*", "release": "patch"},
-                  {"type": "perf", "scope": "backend", "release": "patch"},
-                  {"type": "perf", "scope": "backend/*", "release": "patch"},
-                  {"type": "feat", "release": "minor"},
-                  {"type": "fix", "release": "patch"},
-                  {"type": "perf", "release": "patch"}
-                ]
-              }],
-              ["@semantic-release/release-notes-generator", {
-                "preset": "conventionalcommits"
-              }],
-              ["@semantic-release/github", {
-                "successComment": false,
-                "failComment": false
-              }]
-            ]
-          }
-          EOF
-          npx semantic-release
 
   build-and-push:
     needs: release
