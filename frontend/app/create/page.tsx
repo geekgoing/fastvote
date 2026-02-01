@@ -2,16 +2,13 @@
 
 import { useState, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, ChevronDown, X, CheckSquare, Lock, Calendar } from "lucide-react";
 
 import { Navbar } from "@/components/site/navbar";
 import { useLocale } from "@/components/providers/locale-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 
 export default function CreatePage() {
@@ -20,8 +17,14 @@ export default function CreatePage() {
   const t = messages.create;
   const [title, setTitle] = useState("");
   const [options, setOptions] = useState(["", ""]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
   const [expiresIn, setExpiresIn] = useState("24");
   const [password, setPassword] = useState("");
+  const [allowMultiple, setAllowMultiple] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,6 +42,40 @@ export default function CreatePage() {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isComposing) {
+      e.preventDefault();
+      const trimmedTag = tagInput.trim();
+
+      if (!trimmedTag) return;
+
+      if (trimmedTag.length > 20) {
+        setError(t.errors.tagTooLong || "Tag is too long");
+        return;
+      }
+
+      if (tags.length >= 5) {
+        setError(t.errors.tooManyTags || "Too many tags");
+        return;
+      }
+
+      if (!tags.includes(trimmedTag)) {
+        setTags([...tags, trimmedTag]);
+      }
+
+      setTagInput("");
+      setError("");
+    }
+  };
+
+  const handleTagCompositionEnd = () => {
+    setIsComposing(false);
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
@@ -65,8 +102,9 @@ export default function CreatePage() {
         options: validOptions,
         password: password.trim() || undefined,
         ttl,
-        tags: [],
-        allow_multiple: false,
+        tags,
+        allow_multiple: allowMultiple,
+        is_private: isPrivate,
       });
       router.push(`/vote/${data.uuid}`);
     } catch (err) {
@@ -90,7 +128,6 @@ export default function CreatePage() {
             <ArrowLeft size={16} /> {t.backHome}
           </Button>
           <div>
-            <Badge className="mb-3">{t.badge}</Badge>
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{t.title}</h1>
             <p className="mt-2 text-zinc-500 dark:text-zinc-300">{t.description}</p>
           </div>
@@ -104,7 +141,7 @@ export default function CreatePage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.questionLabel}</label>
-                <Textarea
+                <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder={t.questionPlaceholder}
@@ -144,38 +181,159 @@ export default function CreatePage() {
                     </div>
                   ))}
                 </div>
-                <Button type="button" variant="outline" onClick={addOption}>
+                <Button type="button" variant="outline" onClick={addOption} className="w-full">
                   <Plus size={16} /> {t.addOption}
                 </Button>
               </div>
 
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.expiresLabel}</label>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {t.expiresOptions.map((time) => (
-                      <Button
-                        key={time.value}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.tagsLabel}</label>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500">{t.tagsHint}</span>
+                </div>
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={handleTagCompositionEnd}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder={t.tagsPlaceholder}
+                  disabled={tags.length >= 5}
+                />
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {tags.map((tag) => (
+                      <button
+                        key={tag}
                         type="button"
-                        variant={expiresIn === time.value ? "dark" : "secondary"}
-                        onClick={() => setExpiresIn(time.value)}
+                        onClick={() => removeTag(tag)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-sm font-medium transition-colors hover:bg-emerald-200 dark:hover:bg-emerald-800"
                       >
-                        {time.label}
-                      </Button>
+                        {tag}
+                        <X size={14} className="opacity-70 hover:opacity-100" />
+                      </button>
                     ))}
                   </div>
-                </div>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t.passwordPlaceholder}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center justify-between w-full py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                >
+                  <span>{t.advancedSettings}</span>
+                  <ChevronDown
+                    size={18}
+                    className={`transition-transform duration-200 ${showAdvanced ? "rotate-180" : ""}`}
                   />
+                </button>
+
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    showAdvanced ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-4 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <CheckSquare size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.allowMultipleLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.allowMultipleHint}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAllowMultiple(!allowMultiple)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                          allowMultiple
+                            ? "bg-emerald-600 dark:bg-emerald-500"
+                            : "bg-zinc-300 dark:bg-zinc-700"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                            allowMultiple ? "translate-x-5" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <Lock size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.isPrivateLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.isPrivateHint}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsPrivate(!isPrivate)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                          isPrivate
+                            ? "bg-emerald-600 dark:bg-emerald-500"
+                            : "bg-zinc-300 dark:bg-zinc-700"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                            isPrivate ? "translate-x-5" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {isPrivate && (
+                      <div className="space-y-2 pl-8">
+                        <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={t.passwordPlaceholder}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <Calendar size={18} className="text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0" />
+                        <div>
+                          <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+                            {t.expiresLabel}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {t.expiresHint}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="relative shrink-0">
+                        <select
+                          value={expiresIn}
+                          onChange={(e) => setExpiresIn(e.target.value)}
+                          className="appearance-none rounded-lg border border-zinc-200 bg-white pl-3 pr-8 py-2 text-sm text-zinc-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 cursor-pointer"
+                        >
+                          {t.expiresOptions.map((time) => (
+                            <option key={time.value} value={time.value}>{time.label}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 </div>
               </div>
 

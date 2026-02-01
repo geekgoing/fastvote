@@ -1,19 +1,14 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Search, SlidersHorizontal } from "lucide-react";
 
 type PollFiltersProps = {
   search: string;
   sort: "latest" | "popular";
   labels: {
-    searchLabel: string;
     searchPlaceholder: string;
-    searchButton: string;
-    sortLabel: string;
     sortLatest: string;
     sortPopular: string;
   };
@@ -24,16 +19,18 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(search);
+  const [currentSort, setCurrentSort] = useState(sort);
 
-  // Keep local query state in sync with `search` prop (e.g. browser back/forward)
   useEffect(() => {
     setQuery(search);
   }, [search]);
 
-  const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
+  useEffect(() => {
+    setCurrentSort(sort);
+  }, [sort]);
 
   const updateParams = (next: { search?: string; sort?: "latest" | "popular" }) => {
-    const nextParams = new URLSearchParams(params);
+    const nextParams = new URLSearchParams(searchParams.toString());
 
     if (next.search !== undefined) {
       const trimmed = next.search.trim();
@@ -49,51 +46,45 @@ export default function PollFilters({ search, sort, labels }: PollFiltersProps) 
     }
 
     const queryString = nextParams.toString();
-    router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  };
+
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    updateParams({ search: query });
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-2">
-          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{labels.searchLabel}</span>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              updateParams({ search: query });
-            }}
-            className="flex flex-col gap-2 sm:flex-row"
-          >
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={labels.searchPlaceholder}
-            />
-            <Button type="submit" variant="secondary" className="sm:w-auto">
-              {labels.searchButton}
-            </Button>
-          </form>
-        </div>
+    <div className="flex items-center gap-3">
+      {/* Search Input */}
+      <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-xs">
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+          size={18}
+        />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={labels.searchPlaceholder}
+          className="w-full h-10 rounded-lg border border-zinc-200 bg-white pl-10 pr-4 text-sm placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        />
+      </form>
 
-        <div className="flex flex-col gap-2 sm:items-end">
-          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{labels.sortLabel}</span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={sort === "latest" ? "dark" : "secondary"}
-              onClick={() => updateParams({ sort: "latest" })}
-            >
-              {labels.sortLatest}
-            </Button>
-            <Button
-              type="button"
-              variant={sort === "popular" ? "dark" : "secondary"}
-              onClick={() => updateParams({ sort: "popular" })}
-            >
-              {labels.sortPopular}
-            </Button>
-          </div>
-        </div>
+      {/* Sort Dropdown */}
+      <div className="relative">
+        <SlidersHorizontal size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+        <select
+          value={currentSort}
+          onChange={(e) => {
+            const newSort = e.target.value as "latest" | "popular";
+            setCurrentSort(newSort);
+            updateParams({ sort: newSort });
+          }}
+          className="h-10 appearance-none rounded-lg border border-zinc-200 bg-white pl-9 pr-8 text-sm text-zinc-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+        >
+          <option value="latest">{labels.sortLatest}</option>
+          <option value="popular">{labels.sortPopular}</option>
+        </select>
       </div>
     </div>
   );

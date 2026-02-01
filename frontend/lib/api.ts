@@ -34,6 +34,7 @@ export interface CreateRoomRequest {
   ttl: number;
   tags: string[];
   allow_multiple: boolean;
+  is_private?: boolean;
 }
 
 export interface CreateRoomResponse {
@@ -61,6 +62,19 @@ export interface RoomListResponse {
 
 export interface PasswordVerifyRequest {
   password: string;
+}
+
+export interface Comment {
+  id: string;
+  room_uuid: string;
+  content: string;
+  nickname: string;
+  created_at: string;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  nickname?: string;
 }
 
 export class APIError extends Error {
@@ -148,6 +162,17 @@ export const api = {
   // Get current results
   getResults: (uuid: string) =>
     fetchAPI<VoteResults>(`/rooms/${uuid}/results`),
+
+  // Create a comment
+  createComment: (uuid: string, payload: CreateCommentRequest) =>
+    fetchAPI<Comment>(`/rooms/${uuid}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // Get comments for a room
+  getComments: (uuid: string) =>
+    fetchAPI<Comment[]>(`/rooms/${uuid}/comments`),
 
   // WebSocket URL for real-time updates
   getWebSocketUrl: (uuid: string) => `${WS_URL}/ws/rooms/${uuid}`,

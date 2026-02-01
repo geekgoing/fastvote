@@ -29,7 +29,7 @@ export function ThemeToggle() {
       data-testid="theme-toggle"
       disabled={!mounted}
     >
-      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      {mounted ? (isDark ? <Sun size={18} /> : <Moon size={18} />) : <Moon size={18} />}
     </Button>
   );
 }
