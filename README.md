@@ -9,22 +9,32 @@
 - 임시 공유 링크 자동 생성 (`/vote/{uuid}`)
 - 회원가입/로그인 불필요
 
-### 비밀방 지원
-- 투표방 생성 시 비밀번호 설정 가능
-- 비밀방 입장 시 비밀번호 검증 필요
+### 다양한 투표 옵션
+- **복수 선택**: 여러 옵션에 투표 가능
+- **비공개 투표**: 목록에 표시되지 않고 링크로만 접근
+- **비밀번호 보호**: 투표방 입장 시 비밀번호 검증
+- **태그 시스템**: 투표에 태그 추가하여 분류
+
+### 실시간 결과
+- WebSocket을 통한 실시간 투표 결과 업데이트
+- 막대/원형 그래프로 결과 시각화
+- 새로고침 없이 즉시 결과 확인
+
+### 댓글 시스템
+- 익명 또는 닉네임으로 댓글 작성
+- 투표에 대한 의견 공유
+
+### 다국어 지원
+- 한국어/영어 지원
+- 언어 설정 쿠키 저장
+
+### 다크 모드
+- 시스템 설정 연동
+- 수동 테마 전환
 
 ### 자동 데이터 만료
 - Redis TTL을 활용한 투표 데이터 수명 관리
-- 설정된 시간이 지나면 자동으로 투표방 삭제
-- 서버 리소스 효율적 관리
-
-### 실시간 결과 반영
-- WebSocket을 통한 실시간 투표 결과 업데이트
-- 새로고침 없이 즉시 결과 확인
-
-### 익명 투표
-- 로그인 없이 누구나 참여 가능
-- 개인정보 수집 없음
+- 1시간 ~ 24시간 만료 시간 설정
 
 ---
 
@@ -32,8 +42,8 @@
 
 | 구분 | 기술 |
 |------|------|
-| **Frontend** | Next.js 16, React 19, TailwindCSS |
-| **Backend** | FastAPI, Python |
+| **Frontend** | Next.js 16, React 19, TailwindCSS 4, Recharts |
+| **Backend** | FastAPI, Python 3.12, uv |
 | **Database** | Redis (In-memory, TTL 지원) |
 | **실시간 통신** | WebSocket |
 | **컨테이너** | Docker, Docker Compose |
@@ -79,66 +89,23 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
+### 로컬 개발
+```bash
+# Backend
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+```
+
 ### 접속
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API 문서**: http://localhost:8000/docs
-
----
-
-## 기술적 과제: 중복 투표 방지
-
-로그인 없는 익명 투표 시스템에서 중복 투표를 방지하는 것은 핵심 과제입니다.
-
-### 접근 방식
-
-| 방식 | 설명 | 장점 | 단점 |
-|------|------|------|------|
-| **브라우저 Fingerprint** | Canvas, WebGL, 폰트 등 조합 | 정확도 높음 | 프라이버시 우려, 우회 가능 |
-| **IP 주소 기반** | 클라이언트 IP 해싱 저장 | 구현 간단 | 공유 IP 환경 문제 (회사, 카페) |
-| **쿠키/LocalStorage** | 투표 시 고유 토큰 저장 | 구현 간단 | 시크릿 모드/쿠키 삭제로 우회 |
-| **복합 방식 (권장)** | IP + Fingerprint + 쿠키 조합 | 우회 어려움 | 구현 복잡도 증가 |
-
-### 권장 구현
-
-```python
-# 중복 투표 검증 키 생성 예시
-vote_key = f"voted:{room_uuid}:{hash(ip + fingerprint)}"
-
-# Redis에서 확인
-if redis.exists(vote_key):
-    raise HTTPException(status_code=409, detail="이미 투표하셨습니다")
-
-# 투표 처리 후 키 저장 (방 TTL과 동일하게 설정)
-redis.setex(vote_key, room_ttl, "1")
-```
-
----
-
-## 데이터 구조 (Redis)
-
-```
-# 투표방 정보
-room:{uuid} = {
-    "title": "점심 메뉴 투표",
-    "options": ["짜장면", "짬뽕", "탕수육"],
-    "password": "hashed_password" | null,
-    "created_at": "2024-01-29T10:00:00Z"
-}
-TTL: 3600 (1시간) ~ 86400 (24시간)
-
-# 투표 결과
-votes:{uuid} = {
-    "짜장면": 5,
-    "짬뽕": 3,
-    "탕수육": 2
-}
-TTL: 방과 동일
-
-# 중복 투표 방지
-voted:{uuid}:{user_hash} = "1"
-TTL: 방과 동일
-```
 
 ---
 
@@ -147,40 +114,14 @@ TTL: 방과 동일
 | Method | Endpoint | 설명 |
 |--------|----------|------|
 | `POST` | `/rooms` | 투표방 생성 |
+| `GET` | `/rooms` | 투표방 목록 조회 |
 | `GET` | `/rooms/{uuid}` | 투표방 정보 조회 |
 | `POST` | `/rooms/{uuid}/verify` | 비밀방 비밀번호 검증 |
 | `POST` | `/rooms/{uuid}/vote` | 투표 제출 |
 | `GET` | `/rooms/{uuid}/results` | 투표 결과 조회 |
+| `POST` | `/rooms/{uuid}/comments` | 댓글 작성 |
+| `GET` | `/rooms/{uuid}/comments` | 댓글 목록 조회 |
 | `WS` | `/ws/rooms/{uuid}` | 실시간 결과 구독 |
-
----
-
-## 추가 개발 기능 제안
-
-### 우선순위 높음
-- [ ] **투표 마감 시간 설정**: 특정 시간에 자동으로 투표 마감
-- [ ] **복수 선택 지원**: 여러 개의 선택지에 투표 가능
-- [ ] **결과 공개 시점 설정**: 투표 종료 전까지 결과 숨김
-
-### 우선순위 중간
-- [ ] **QR 코드 생성**: 투표 링크를 QR 코드로 공유
-- [ ] **투표 통계**: 시간대별 투표 추이 그래프
-- [ ] **선택지 추가 허용**: 참여자가 새로운 선택지 제안
-- [ ] **익명 댓글**: 선택지별 의견 남기기
-- [ ] **관리자 모드**: 투표 생성자에게 관리 토큰 발급 (결과 초기화, 조기 마감 등)
-
-### 우선순위 낮음
-- [ ] **투표 템플릿**: 자주 사용하는 투표 유형 저장
-- [ ] **다국어 지원**: i18n 적용
-- [ ] **임베드 위젯**: 외부 사이트에 투표 삽입
-- [ ] **Slack/Discord 연동**: 봇을 통한 투표 생성 및 알림
-- [ ] **투표 결과 내보내기**: CSV, 이미지로 다운로드
-- [ ] **카카오톡/라인 공유**: SNS 공유 버튼
-
-### 고급 기능
-- [ ] **가중치 투표**: 사용자별 투표 가중치 부여
-- [ ] **순위 투표 (Ranked Choice)**: 선호도 순위 지정
-- [ ] **조건부 투표**: 이전 투표 결과에 따른 후속 투표
 
 ---
 
@@ -188,17 +129,34 @@ TTL: 방과 동일
 
 ```
 fastvote/
-├── docker-compose.yml    # 서비스 오케스트레이션
+├── docker-compose.yml
 ├── README.md
 ├── backend/
 │   ├── Dockerfile
-│   ├── main.py           # FastAPI 앱
-│   └── requirements.txt
+│   ├── pyproject.toml
+│   └── app/
+│       ├── main.py
+│       ├── config.py
+│       ├── database.py
+│       ├── models/
+│       ├── routers/
+│       ├── services/
+│       └── utils/
 └── frontend/
     ├── Dockerfile
-    ├── app/              # Next.js App Router
     ├── package.json
-    └── ...
+    ├── app/
+    │   ├── page.tsx          # 메인 페이지
+    │   ├── create/           # 투표 생성
+    │   ├── polls/            # 투표 목록
+    │   └── vote/[uuid]/      # 투표 페이지
+    ├── components/
+    │   ├── ui/               # 공통 UI 컴포넌트
+    │   ├── site/             # 사이트 컴포넌트
+    │   └── providers/        # Context Provider
+    └── lib/
+        ├── api.ts            # API 클라이언트
+        └── i18n.ts           # 다국어 지원
 ```
 
 ---
