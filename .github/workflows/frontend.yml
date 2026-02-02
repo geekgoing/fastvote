@@ -139,8 +139,13 @@ jobs:
           git clone https://x-access-token:${GITOPS_PAT}@github.com/geekgoing/gitops.git
           cd gitops
           
-          sed -i 's|fastvote-frontend:.*|fastvote-frontend:${{ needs.release.outputs.new_release_version }}|' apps/fastvote/base/frontend.yaml
+          # Install yq
+          wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          chmod +x /usr/local/bin/yq
           
-          git add apps/fastvote/base/frontend.yaml
-          git commit -m "chore: update frontend tag to v${{ needs.release.outputs.new_release_version }}"
+          # Update frontend image tag
+          yq eval '.images[] |= select(.name == "ghcr.io/geekgoing/fastvote-frontend").newTag = "${{ needs.release.outputs.new_release_version }}"' -i apps/fastvote/overlays/prod/kustomization.yaml
+          
+          git add apps/fastvote/overlays/prod/kustomization.yaml
+          git commit -m "chore: update frontend to v${{ needs.release.outputs.new_release_version }}"
           git push
