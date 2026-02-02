@@ -118,4 +118,3 @@ npm run start    # 프로덕션 서버
 npm run lint     # ESLint 검사
 npm run test:e2e # E2E 테스트
 ```
-# Test semantic-release

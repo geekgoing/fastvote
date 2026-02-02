@@ -134,4 +134,3 @@ Kubernetes 환경에서는 Ingress가 path 기반으로 라우팅:
 - `/api/*` → backend
 - `/ws/*` → backend
 - `/*` → frontend
-# Test semantic-release
