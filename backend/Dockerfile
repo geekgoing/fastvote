@@ -8,15 +8,17 @@ WORKDIR /app
 # uv (pinned)
 COPY --from=ghcr.io/astral-sh/uv:0.4.28 /uv /bin/uv
 
+# non-root
+RUN addgroup --system app && adduser --system --ingroup app app
+
 # deps
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 # app
 COPY . .
+RUN chown -R app:app /app
 
-# non-root
-RUN addgroup --system app && adduser --system --ingroup app app
 USER app
 
 EXPOSE 8000
