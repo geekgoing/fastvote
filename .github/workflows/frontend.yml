@@ -128,3 +128,19 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Update gitops repo
+        env:
+          GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git clone https://x-access-token:${GITOPS_PAT}@github.com/geekgoing/gitops.git
+          cd gitops
+          
+          sed -i 's|fastvote-frontend:.*|fastvote-frontend:${{ needs.release.outputs.new_release_version }}|' apps/fastvote/base/frontend.yaml
+          
+          git add apps/fastvote/base/frontend.yaml
+          git commit -m "chore: update frontend to v${{ needs.release.outputs.new_release_version }}"
+          git push
