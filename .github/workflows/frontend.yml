@@ -142,5 +142,5 @@ jobs:
           sed -i 's|fastvote-frontend:.*|fastvote-frontend:${{ needs.release.outputs.new_release_version }}|' apps/fastvote/base/frontend.yaml
           
           git add apps/fastvote/base/frontend.yaml
-          git commit -m "chore: update frontend to v${{ needs.release.outputs.new_release_version }}"
+          git commit -m "chore: update frontend tag to v${{ needs.release.outputs.new_release_version }}"
           git push

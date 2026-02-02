@@ -138,5 +138,5 @@ jobs:
           sed -i 's|fastvote-backend:.*|fastvote-backend:${{ needs.release.outputs.new_release_version }}|' apps/fastvote/base/backend.yaml
           
           git add apps/fastvote/base/backend.yaml
-          git commit -m "chore: update backend to v${{ needs.release.outputs.new_release_version }}"
+          git commit -m "chore: update backend tag to v${{ needs.release.outputs.new_release_version }}"
           git push
