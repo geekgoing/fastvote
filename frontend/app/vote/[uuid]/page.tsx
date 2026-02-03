@@ -67,19 +67,27 @@ export default function VotePage({ params }: PageProps) {
         if (data.has_password) {
           setState('password');
         } else {
-          // Load results
+          // Load results and comments in parallel; log errors separately
           try {
-            const resultsData = await api.getResults(uuid);
-            setResults(resultsData);
+            const [resultsRes, commentsRes] = await Promise.allSettled([
+              api.getResults(uuid),
+              api.getComments(uuid),
+            ]);
+
+            if (resultsRes.status === 'fulfilled') {
+              setResults(resultsRes.value);
+            } else {
+              console.error('Failed to load results:', resultsRes.reason);
+            }
+
+            if (commentsRes.status === 'fulfilled') {
+              setComments(commentsRes.value);
+            } else {
+              console.error('Failed to load comments:', commentsRes.reason);
+            }
           } catch (err) {
-            console.error('Failed to load results:', err);
-          }
-          // Load comments
-          try {
-            const commentsData = await api.getComments(uuid);
-            setComments(commentsData);
-          } catch (err) {
-            console.error('Failed to load comments:', err);
+            // Defensive: Promise.allSettled shouldn't throw, but keep parity with previous behavior
+            console.error('Unexpected error when loading results/comments:', err);
           }
           setState('voting');
           setShouldConnectWs(true);
@@ -149,19 +157,26 @@ export default function VotePage({ params }: PageProps) {
 
     try {
       await api.verifyPassword(uuid, password);
-      // Load results
+      // Load results and comments in parallel; log errors separately
       try {
-        const data = await api.getResults(uuid);
-        setResults(data);
+        const [resultsRes, commentsRes] = await Promise.allSettled([
+          api.getResults(uuid),
+          api.getComments(uuid),
+        ]);
+
+        if (resultsRes.status === 'fulfilled') {
+          setResults(resultsRes.value);
+        } else {
+          console.error('Failed to load results:', resultsRes.reason);
+        }
+
+        if (commentsRes.status === 'fulfilled') {
+          setComments(commentsRes.value);
+        } else {
+          console.error('Failed to load comments:', commentsRes.reason);
+        }
       } catch (err) {
-        console.error('Failed to load results:', err);
-      }
-      // Load comments
-      try {
-        const commentsData = await api.getComments(uuid);
-        setComments(commentsData);
-      } catch (err) {
-        console.error('Failed to load comments:', err);
+        console.error('Unexpected error when loading results/comments:', err);
       }
       setState('voting');
       setShouldConnectWs(true);
