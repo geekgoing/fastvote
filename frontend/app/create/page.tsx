@@ -101,7 +101,7 @@ export default function CreatePage() {
 
     try {
       const ttl = parseInt(expiresIn, 10) * 60 * 60;
-      const data = await api.createRoom({
+       const data = await api.createRoom({
         title: title.trim(),
         options: validOptions,
         password: password.trim() || undefined,
@@ -110,7 +110,12 @@ export default function CreatePage() {
         allow_multiple: allowMultiple,
         is_private: isPrivate,
       });
-      router.push(`/vote/${data.uuid}`);
+       const params = new URLSearchParams();
+       if (data.share_token) {
+         params.set('share_token', data.share_token);
+       }
+       const query = params.toString();
+       router.push(query ? `/vote/${data.uuid}?${query}` : `/vote/${data.uuid}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errors.submitFailed);
     } finally {
@@ -142,7 +147,7 @@ export default function CreatePage() {
             <CardTitle className="text-zinc-900 dark:text-zinc-100">{t.cardTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.questionLabel}</label>
                 <Input
@@ -312,8 +317,10 @@ export default function CreatePage() {
                     {isPrivate && (
                       <div className="space-y-2 pl-8">
                         <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
-                        <Input
+                       <Input
                           type="password"
+                          id="room-password"
+                          name="room-password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder={t.passwordPlaceholder}
