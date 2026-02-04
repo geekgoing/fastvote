@@ -98,20 +98,27 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
 
 
 @router.get("/{room_uuid}/results")
-async def get_results(room_uuid: str):
+async def get_results(room_uuid: str, request: Request, fingerprint: str | None = Query(None, description="Client fingerprint")):
     """투표 결과 조회"""
     room = await get_room(room_uuid)
     if not room:
         raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
 
     results = await get_vote_results(room_uuid)
+    has_voted_flag: bool | None = None
+    if fingerprint:
+        client_ip = request.client.host
+        has_voted_flag = await has_voted(room_uuid, fingerprint, client_ip)
 
-    return {
+    response = {
         "room_uuid": room_uuid,
         "title": room["title"],
         "results": results,
-        "expires_at": room["expires_at"]
+        "expires_at": room["expires_at"],
     }
+    if has_voted_flag is not None:
+        response["has_voted"] = has_voted_flag
+    return response
 
 
 @router.post("/{room_uuid}/comments", response_model=Comment)
