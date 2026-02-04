@@ -43,6 +43,7 @@ export interface VoteResults {
   title: string;
   results: Record<string, number>;
   expires_at: string | null;
+  has_voted?: boolean;
 }
 
 export interface VoteRequest {
@@ -183,8 +184,10 @@ export const api = {
     }),
 
   // Get current results
-  getResults: (uuid: string) =>
-    fetchAPI<VoteResults>(`/rooms/${uuid}/results`),
+  getResults: (uuid: string, fingerprint?: string) => {
+    const params = fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : '';
+    return fetchAPI<VoteResults>(`/rooms/${uuid}/results${params}`);
+  },
 
   // Create a comment
   createComment: (uuid: string, payload: CreateCommentRequest) =>

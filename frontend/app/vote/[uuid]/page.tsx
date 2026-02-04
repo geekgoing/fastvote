@@ -64,17 +64,21 @@ export default function VotePage({ params }: PageProps) {
         const data = await api.getRoom(uuid);
         setRoom(data);
 
-        if (data.has_password) {
-          setState('password');
-        } else {
-          // Load results then comments sequentially; log errors separately
-          try {
-            try {
-              const resultsData = await api.getResults(uuid);
-              setResults(resultsData);
-            } catch (err) {
-              console.error('Failed to load results:', err);
-            }
+         if (data.has_password) {
+           setState('password');
+         } else {
+           // Load results then comments sequentially; log errors separately
+           try {
+             try {
+               const fingerprint = getFingerprint();
+               const resultsData = await api.getResults(uuid, fingerprint);
+               setResults(resultsData);
+               if (resultsData.has_voted) {
+                 setState('voted');
+               }
+             } catch (err) {
+               console.error('Failed to load results:', err);
+             }
 
             try {
               const commentsData = await api.getComments(uuid);
@@ -86,9 +90,9 @@ export default function VotePage({ params }: PageProps) {
             // Defensive: keep parity with previous behavior
             console.error('Unexpected error when loading results/comments:', err);
           }
-          setState('voting');
-          setShouldConnectWs(true);
-        }
+           setState(prev => (prev === 'voted' ? 'voted' : 'voting'));
+           setShouldConnectWs(true);
+         }
       } catch (err) {
         if (err instanceof APIError && err.status === 404) {
           setError(t.errors.notFound);
@@ -155,13 +159,17 @@ export default function VotePage({ params }: PageProps) {
     try {
       await api.verifyPassword(uuid, password);
       // Load results and comments in parallel; log errors separately
-      try {
-        try {
-          const resultsData = await api.getResults(uuid);
-          setResults(resultsData);
-        } catch (err) {
-          console.error('Failed to load results:', err);
-        }
+       try {
+         try {
+           const fingerprint = getFingerprint();
+           const resultsData = await api.getResults(uuid, fingerprint);
+           setResults(resultsData);
+           if (resultsData.has_voted) {
+             setState('voted');
+           }
+         } catch (err) {
+           console.error('Failed to load results:', err);
+         }
 
         try {
           const commentsData = await api.getComments(uuid);
@@ -172,8 +180,8 @@ export default function VotePage({ params }: PageProps) {
       } catch (err) {
         console.error('Unexpected error when loading results/comments:', err);
       }
-      setState('voting');
-      setShouldConnectWs(true);
+       setState(prev => (prev === 'voted' ? 'voted' : 'voting'));
+       setShouldConnectWs(true);
     } catch (err) {
       if (err instanceof APIError && err.status === 401) {
         setPasswordError(t.passwordErrors.incorrect);
