@@ -115,9 +115,7 @@ async def get_room_list(
     for room_uuid in room_uuids:
         room = await get_room(room_uuid)
         if room:
-            # 비공개 방 필터링 (공개 목록에서 제외)
-            if room.get("is_private", False):
-                continue
+            # 비공개 방도 목록에 포함 (is_private 필터링 제거)
             # 검색 필터 (제목만)
             if search and search.lower() not in room.get("title", "").lower():
                 continue
