@@ -39,6 +39,9 @@ async def create_room(
 
     if password:
         room_data["password_hash"] = hash_password(password)
+        # generate share token for password bypass links
+        from secrets import token_urlsafe
+        room_data["share_token"] = token_urlsafe(32)
 
     await redis.setex(f"room:{room_uuid}", ttl, json.dumps(room_data))
 
@@ -58,6 +61,7 @@ async def create_room(
 
     response = room_data.copy()
     response.pop("password_hash", None)
+    # expose share_token only on create response
     return response
 
 

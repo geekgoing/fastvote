@@ -48,7 +48,8 @@ class VoteRequest(BaseModel):
 
 
 class PasswordVerifyRequest(BaseModel):
-    password: str
+    password: str | None = None
+    share_token: str | None = None
 
 
 class RoomSummary(BaseModel):

@@ -52,6 +52,8 @@ async def get_room_info(room_uuid: str):
 
     response = room.copy()
     response.pop("password_hash", None)
+    # Do not expose share_token on GET room
+    response.pop("share_token", None)
     return response
 
 
@@ -65,10 +67,14 @@ async def verify_room_password(room_uuid: str, request: PasswordVerifyRequest):
     if "password_hash" not in room:
         return {"verified": True}
 
-    if verify_password(request.password, room["password_hash"]):
+    # share_token bypass
+    if request.share_token and room.get("share_token") == request.share_token:
         return {"verified": True}
-    else:
-        raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다")
+
+    if request.password and verify_password(request.password, room["password_hash"]):
+        return {"verified": True}
+
+    raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다")
 
 
 @router.post("/{room_uuid}/vote")
