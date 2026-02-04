@@ -63,6 +63,7 @@ export interface CreateRoomRequest {
 
 export interface CreateRoomResponse {
   uuid: string;
+  share_token?: string;
 }
 
 export interface RoomSummary {
@@ -144,10 +145,10 @@ export const api = {
     fetchAPI<VoteRoom>(`/rooms/${uuid}`),
 
   // Verify room password
-  verifyPassword: (uuid: string, password: string) =>
+  verifyPassword: (uuid: string, password?: string, share_token?: string) =>
     fetchAPI<{ verified: boolean }>(`/rooms/${uuid}/verify`, {
       method: 'POST',
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, share_token }),
     }),
 
   // List rooms

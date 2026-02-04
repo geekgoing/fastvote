@@ -64,10 +64,25 @@ export default function VotePage({ params }: PageProps) {
         const data = await api.getRoom(uuid);
         setRoom(data);
 
+        const params = new URLSearchParams(window.location.search);
+        const shareToken = params.get('share_token');
+
          if (data.has_password) {
-           setState('password');
-         } else {
-           // Load results then comments sequentially; log errors separately
+           // attempt share_token bypass
+           if (shareToken) {
+             try {
+               await api.verifyPassword(uuid, undefined, shareToken);
+             } catch (err) {
+               setState('password');
+               return;
+             }
+           } else {
+             setState('password');
+             return;
+           }
+         }
+         {
+          // Load results then comments sequentially; log errors separately
            try {
              try {
                const fingerprint = getFingerprint();
