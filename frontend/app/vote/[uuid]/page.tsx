@@ -355,21 +355,18 @@ export default function VotePage({ params }: PageProps) {
               <p className="text-sm text-zinc-500 dark:text-zinc-300">{t.protectedDescription}</p>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4" autoComplete="off">
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="room-password" className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">
                     {t.passwordLabel}
                   </label>
-                     <Input
-                       id="room-password"
-                       name="room-password"
-                       type="password"
-                       value={password}
-                       onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                       placeholder={t.passwordPlaceholder}
-                       autoComplete="new-password"
-                       autoFocus
-                     />
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                        placeholder={t.passwordPlaceholder}
+                        autoFocus
+                      />
                   {passwordError && (
                     <div className="text-sm text-red-600 dark:text-red-300">{passwordError}</div>
                   )}

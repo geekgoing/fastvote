@@ -147,7 +147,7 @@ export default function CreatePage() {
             <CardTitle className="text-zinc-900 dark:text-zinc-100">{t.cardTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.questionLabel}</label>
                 <Input
@@ -317,14 +317,11 @@ export default function CreatePage() {
                     {isPrivate && (
                       <div className="space-y-2 pl-8">
                         <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.passwordLabel}</label>
-                       <Input
+                        <Input
                           type="password"
-                          id="room-password"
-                          name="room-password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder={t.passwordPlaceholder}
-                          autoComplete="new-password"
                         />
                       </div>
                     )}
