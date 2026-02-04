@@ -44,29 +44,33 @@ export default function CreatePage() {
     setOptions(newOptions);
   };
 
+  const addTag = () => {
+    const trimmedTag = tagInput.trim();
+
+    if (!trimmedTag) return;
+
+    if (trimmedTag.length > 20) {
+      setError(t.errors.tagTooLong || "Tag is too long");
+      return;
+    }
+
+    if (tags.length >= 5) {
+      setError(t.errors.tooManyTags || "Too many tags");
+      return;
+    }
+
+    if (!tags.includes(trimmedTag)) {
+      setTags([...tags, trimmedTag]);
+    }
+
+    setTagInput("");
+    setError("");
+  };
+
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !isComposing) {
       e.preventDefault();
-      const trimmedTag = tagInput.trim();
-
-      if (!trimmedTag) return;
-
-      if (trimmedTag.length > 20) {
-        setError(t.errors.tagTooLong || "Tag is too long");
-        return;
-      }
-
-      if (tags.length >= 5) {
-        setError(t.errors.tooManyTags || "Too many tags");
-        return;
-      }
-
-      if (!tags.includes(trimmedTag)) {
-        setTags([...tags, trimmedTag]);
-      }
-
-      setTagInput("");
-      setError("");
+      addTag();
     }
   };
 
@@ -191,15 +195,25 @@ export default function CreatePage() {
                   <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">{t.tagsLabel}</label>
                   <span className="text-xs text-zinc-400 dark:text-zinc-500">{t.tagsHint}</span>
                 </div>
-                <Input
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onCompositionStart={() => setIsComposing(true)}
-                  onCompositionEnd={handleTagCompositionEnd}
-                  onKeyDown={handleTagKeyDown}
-                  placeholder={t.tagsPlaceholder}
-                  disabled={tags.length >= 5}
-                />
+                 <div className="flex gap-2">
+                   <Input
+                     value={tagInput}
+                     onChange={(e) => setTagInput(e.target.value)}
+                     onCompositionStart={() => setIsComposing(true)}
+                     onCompositionEnd={handleTagCompositionEnd}
+                     onKeyDown={handleTagKeyDown}
+                     placeholder={t.tagsPlaceholder}
+                     disabled={tags.length >= 5}
+                   />
+                   <Button
+                     type="button"
+                     variant="outline"
+                     onClick={addTag}
+                     disabled={!tagInput.trim() || tags.length >= 5}
+                   >
+                     {t.addTag || "Add"}
+                   </Button>
+                 </div>
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {tags.map((tag) => (
@@ -303,6 +317,7 @@ export default function CreatePage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder={t.passwordPlaceholder}
+                          autoComplete="new-password"
                         />
                       </div>
                     )}

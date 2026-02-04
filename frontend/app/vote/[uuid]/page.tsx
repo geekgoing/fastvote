@@ -351,6 +351,7 @@ export default function VotePage({ params }: PageProps) {
                       value={password}
                       onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                       placeholder={t.passwordPlaceholder}
+                      autoComplete="new-password"
                       autoFocus
                     />
                   {passwordError && (
