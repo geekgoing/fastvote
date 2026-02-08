@@ -77,6 +77,20 @@ export interface RoomSummary {
   allow_multiple: boolean;
 }
 
+// Local client-side record for "My Polls" stored in localStorage
+export interface MyPollRecord {
+  uuid: string;
+  title: string;
+  created_at: string;
+  expires_at?: string | null;
+  tags?: string[];
+  total_votes?: number;
+  has_password?: boolean;
+  allow_multiple?: boolean;
+  is_private?: boolean;
+  share_token?: string;
+}
+
 export interface RoomListResponse {
   rooms: RoomSummary[];
   total: number;

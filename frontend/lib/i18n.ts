@@ -177,7 +177,10 @@ export const messages = {
       enterPoll: "입장하기",
       participants: (count: number) => `${count}명 참여`,
       viewPoll: "투표 보기",
-    },
+      myPollsTitle: "내가 만든 투표",
+      myPollsEmpty: "저장된 투표가 없습니다.",
+      deletePoll: "삭제",
+      },
     vote: {
       loading: "투표방 정보를 불러오는 중...",
       errorBadge: "오류",
@@ -410,7 +413,10 @@ export const messages = {
       optionsCount: (count: number) => `${count} options`,
       participants: (count: number) => `${count} participants`,
       viewPoll: "View poll",
-    },
+      myPollsTitle: "My polls",
+      myPollsEmpty: "No saved polls.",
+      deletePoll: "Remove",
+      },
     vote: {
       loading: "Loading vote room...",
       errorBadge: "Error",

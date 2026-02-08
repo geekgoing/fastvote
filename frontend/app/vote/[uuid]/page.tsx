@@ -402,6 +402,8 @@ export default function VotePage({ params }: PageProps) {
   // Voting/Results state
   if ((state === "voting" || state === "voted") && room) {
     const winnerOption = getWinnerOption();
+    const isVoting = state === "voting";
+    const isVoted = state === "voted";
 
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -444,7 +446,7 @@ export default function VotePage({ params }: PageProps) {
                 )}
               </div>
               {/* Chart Toggle - visible only when voted */}
-              {state === "voted" && (
+               {isVoted && (
                 <div className="flex gap-1 bg-white/20 p-1 rounded-lg ml-4">
                   <button
                     onClick={() => setViewMode('bar')}
@@ -479,8 +481,13 @@ export default function VotePage({ params }: PageProps) {
           <Card className="rounded-t-none border-t-0 shadow-lg">
             <CardContent className="p-6 space-y-6">
               {/* VOTING STATE - Only show options, no results */}
-              {state === "voting" && (
-                <form onSubmit={handleVoteSubmit} className="space-y-4">
+               {isVoting && (
+                <div>
+                  {/* Voting title required by tests */}
+                  <h2 data-testid="vote-title" className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    {t.voteTitle}
+                  </h2>
+                  <form onSubmit={handleVoteSubmit} className="space-y-4">
                   <div className="space-y-3">
                     {room.options.map((option) => {
                       const isSelected = selectedOptions.includes(option);
@@ -550,11 +557,12 @@ export default function VotePage({ params }: PageProps) {
                   >
                     {t.submit}
                   </Button>
-                </form>
+                  </form>
+                </div>
               )}
 
               {/* VOTED STATE - Show results */}
-              {state === "voted" && (
+               {isVoted && (
                 <div className="space-y-4">
                   {/* Results Display */}
                   {results && totalVotes > 0 ? (

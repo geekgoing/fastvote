@@ -9,7 +9,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api, type MyPollRecord } from "@/lib/api";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -101,7 +101,7 @@ export default function CreatePage() {
 
     try {
       const ttl = parseInt(expiresIn, 10) * 60 * 60;
-       const data = await api.createRoom({
+      const data = await api.createRoom({
         title: title.trim(),
         options: validOptions,
         password: password.trim() || undefined,
@@ -110,12 +110,62 @@ export default function CreatePage() {
         allow_multiple: allowMultiple,
         is_private: isPrivate,
       });
-       const params = new URLSearchParams();
-       if (data.share_token) {
-         params.set('share_token', data.share_token);
-       }
-       const query = params.toString();
-       router.push(query ? `/vote/${data.uuid}?${query}` : `/vote/${data.uuid}`);
+      // After successful creation, attempt to fetch full room details
+      let record: MyPollRecord = {
+        uuid: data.uuid,
+        title: title.trim(),
+        created_at: new Date().toISOString(),
+        expires_at: null,
+        tags,
+        total_votes: 0,
+        has_password: Boolean(password.trim()),
+        allow_multiple: allowMultiple,
+        is_private: isPrivate,
+        share_token: data.share_token,
+      };
+
+      try {
+        const full = await api.getRoom(data.uuid);
+        record = {
+          uuid: full.uuid,
+          title: full.title,
+          created_at: full.created_at,
+          expires_at: full.expires_at ?? null,
+          tags: full.tags ?? tags,
+          total_votes: 0,
+          has_password: full.has_password,
+          allow_multiple: full.allow_multiple ?? allowMultiple,
+          is_private: isPrivate,
+          share_token: data.share_token,
+        };
+      } catch {
+        // fallback to minimal record (already set)
+        // Do not block on network errors
+      }
+
+      try {
+        const key = "fastvote:my-polls";
+        const raw = localStorage.getItem(key);
+        const list: MyPollRecord[] = raw ? (JSON.parse(raw) as MyPollRecord[]) : [];
+        // remove any existing with same uuid
+        const filtered = list.filter((r) => r.uuid !== record.uuid);
+        // insert newest first
+        filtered.unshift(record);
+        // cap list
+        const capped = filtered.slice(0, 30);
+        localStorage.setItem(key, JSON.stringify(capped));
+      } catch (storageErr) {
+        // ignore localStorage errors
+        // eslint-disable-next-line no-console
+        console.warn("Failed to save my poll to localStorage", storageErr);
+      }
+
+      const params = new URLSearchParams();
+      if (data.share_token) {
+        params.set("share_token", data.share_token);
+      }
+      const query = params.toString();
+      router.push(query ? `/vote/${data.uuid}?${query}` : `/vote/${data.uuid}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errors.submitFailed);
     } finally {

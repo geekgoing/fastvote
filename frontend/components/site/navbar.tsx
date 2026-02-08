@@ -13,6 +13,9 @@ export function Navbar() {
   const router = useRouter();
   const { locale, setLocale, messages, mounted } = useLocale();
 
+  const LOCALE_TESTID_EN = "locale-en";
+  const LOCALE_TESTID_KO = "locale-ko";
+
   const toggleLang = () => {
     const newLocale = locale === "ko" ? "en" : "ko";
     setLocale(newLocale);
@@ -38,6 +41,7 @@ export function Navbar() {
               type="button"
               onClick={toggleLang}
               className="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold uppercase"
+              data-testid={mounted ? (locale === "ko" ? LOCALE_TESTID_EN : LOCALE_TESTID_KO) : LOCALE_TESTID_EN}
               title={messages.navbar.languageLabel}
             >
               <Globe size={16} />

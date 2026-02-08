@@ -6,6 +6,7 @@ import { Navbar } from "@/components/site/navbar";
 import { api, type RoomSummary } from "@/lib/api";
 import { getLocaleFromCookie, getMessages, localeCookieName } from "@/lib/i18n";
 import PollFilters from "./poll-filters";
+import MyPolls from "./my-polls";
 
 type PollsPageProps = {
   searchParams?: Promise<{
@@ -62,6 +63,8 @@ export default async function PollsPage({ searchParams }: PollsPageProps) {
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        {/* My Polls (client-side, reads localStorage) */}
+        <MyPolls localeCookie={cookieStore.get(localeCookieName)?.value ?? null} />
         {/* Header */}
         <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
