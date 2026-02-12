@@ -16,6 +16,7 @@ export const messages = {
       actions: {
         join: "투표 목록",
         create: "투표 생성",
+        myPolls: "내 투표",
       },
       languageLabel: "언어",
       themeLabel: "테마",
@@ -178,6 +179,7 @@ export const messages = {
       participants: (count: number) => `${count}명 참여`,
       viewPoll: "투표 보기",
       myPollsTitle: "내가 만든 투표",
+      myPollsTotal: (count: number) => `총 ${count}개의 투표`,
       myPollsEmpty: "저장된 투표가 없습니다.",
       deletePoll: "삭제",
       },
@@ -255,6 +257,7 @@ export const messages = {
       actions: {
         join: "Polls",
         create: "Create poll",
+        myPolls: "My polls",
       },
       languageLabel: "Language",
       themeLabel: "Theme",
@@ -414,6 +417,7 @@ export const messages = {
       participants: (count: number) => `${count} participants`,
       viewPoll: "View poll",
       myPollsTitle: "My polls",
+      myPollsTotal: (count: number) => `${count} poll${count !== 1 ? "s" : ""}`,
       myPollsEmpty: "No saved polls.",
       deletePoll: "Remove",
       },
