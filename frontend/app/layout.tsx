@@ -18,12 +18,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FastVote",
-  description: "빠른 익명 투표",
+  title: {
+    default: "FastVote",
+    template: "%s | FastVote",
+  },
+  description: "빠른 익명 투표 - 간편하게 투표를 만들고 공유하세요",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fastvote.geekgoing.com"),
+  openGraph: {
+    title: "FastVote",
+    description: "빠른 익명 투표 - 간편하게 투표를 만들고 공유하세요",
+    siteName: "FastVote",
+    locale: "ko_KR",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "FastVote - 빠른 익명 투표",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FastVote",
+    description: "빠른 익명 투표 - 간편하게 투표를 만들고 공유하세요",
+    images: ["/og-image.png"],
+  },
   icons: {
-    icon: "/fastvote.png",
-    shortcut: "/fastvote.png",
-    apple: "/fastvote.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 
