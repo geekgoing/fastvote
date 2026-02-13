@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from app.models.schemas import RoomCreate, VoteRequest, PasswordVerifyRequest, SortOrder, RoomListResponse, CommentCreate, Comment
-from app.services.room import create_room, get_room, get_vote_results, get_room_list
+from app.services.room import create_room, get_room, get_vote_results, get_room_list, is_room_expired
 from app.services.vote import has_voted, cast_vote
 from app.services.comment import create_comment, get_comments
 from app.utils.security import verify_password
@@ -54,6 +54,7 @@ async def get_room_info(room_uuid: str):
     response.pop("password_hash", None)
     # Do not expose share_token on GET room
     response.pop("share_token", None)
+    response["is_expired"] = is_room_expired(room)
     return response
 
 
@@ -84,6 +85,9 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
     if not room:
         raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
 
+    if is_room_expired(room):
+        raise HTTPException(status_code=410, detail="투표가 마감되었습니다")
+
     # 모든 선택한 옵션이 유효한지 확인
     for option in vote_request.options:
         if option not in room["options"]:
@@ -104,11 +108,21 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
 
 
 @router.get("/{room_uuid}/results")
-async def get_results(room_uuid: str, request: Request, fingerprint: str | None = Query(None, description="Client fingerprint")):
+async def get_results(
+    room_uuid: str,
+    request: Request,
+    fingerprint: str | None = Query(None, description="Client fingerprint"),
+    share_token: str | None = Query(None, description="Share token for creator access"),
+):
     """투표 결과 조회"""
     room = await get_room(room_uuid)
     if not room:
         raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
+
+    # 만료 후에는 share_token이 있어야 결과 조회 가능
+    if is_room_expired(room):
+        if not share_token or share_token != room.get("share_token"):
+            raise HTTPException(status_code=410, detail="투표가 마감되었습니다")
 
     results = await get_vote_results(room_uuid)
     has_voted_flag: bool | None = None

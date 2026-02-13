@@ -20,7 +20,7 @@ interface PageProps {
   params: Promise<{ uuid: string }>;
 }
 
-type ViewState = 'loading' | 'password' | 'voting' | 'voted' | 'error';
+type ViewState = 'loading' | 'password' | 'voting' | 'voted' | 'error' | 'closed';
 
 export function VoteClient({ params }: PageProps) {
   const { uuid } = use(params);
@@ -66,6 +66,25 @@ export function VoteClient({ params }: PageProps) {
 
         const params = new URLSearchParams(window.location.search);
         const shareToken = params.get('share_token');
+
+        // 만료된 투표 처리
+        if (data.is_expired) {
+          if (!shareToken) {
+            // 일반 방문자 → 마감 메시지만 표시
+            setState('closed');
+            return;
+          }
+          // 생성자 (share_token 있음) → 결과 조회
+          try {
+            const fingerprint = getFingerprint();
+            const resultsData = await api.getResults(uuid, fingerprint, shareToken);
+            setResults(resultsData);
+          } catch (err) {
+            console.error('Failed to load results for expired poll:', err);
+          }
+          setState('voted');
+          return;
+        }
 
          if (data.has_password) {
            // attempt share_token bypass
@@ -340,6 +359,27 @@ export function VoteClient({ params }: PageProps) {
     );
   }
 
+  // Closed (expired) state - no share_token
+  if (state === "closed" && room) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <Navbar />
+        <div className="mx-auto flex max-w-3xl items-center justify-center px-4 py-16">
+          <Card className="w-full p-8 text-center">
+            <Badge variant="secondary" className="mb-3">
+              {t.closedBadge}
+            </Badge>
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">{t.pollClosed}</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-300 mb-6">{t.pollClosedDescription}</p>
+            <Button asChild variant="secondary">
+              <Link href="/polls">{t.backToList}</Link>
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Password entry state
   if (state === "password" && room) {
     return (
@@ -421,7 +461,12 @@ export function VoteClient({ params }: PageProps) {
 
           {/* Emerald Gradient Header */}
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-8 rounded-t-2xl relative">
-            {room.has_password && (
+            {room.is_expired && (
+              <Badge className="bg-red-500/80 text-white border-0 mb-3 hover:bg-red-500/90">
+                {t.closedBadge}
+              </Badge>
+            )}
+            {room.has_password && !room.is_expired && (
               <Badge className="bg-white/20 text-white border-0 mb-3 hover:bg-white/30">
                 🔒 {t.privateBadge}
               </Badge>
