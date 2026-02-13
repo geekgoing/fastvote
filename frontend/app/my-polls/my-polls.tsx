@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart2, Clock, Lock, CheckSquare, Trash2 } from "lucide-react";
+import { BarChart2, Clock, Lock, CheckSquare, Trash2, XCircle } from "lucide-react";
 import { api, APIError, type MyPollRecord } from "@/lib/api";
 import { getMessages, getLocaleFromCookie } from "@/lib/i18n";
 
@@ -33,13 +33,8 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
   const [items, setItems] = useState<MyPollRecord[]>([]);
 
   useEffect(() => {
-    // Load from storage, cleanup expired entries
-    const now = Date.now();
-    const loaded = parseStored().filter((it) => {
-      if (!it.expires_at) return true;
-      const t = Date.parse(it.expires_at);
-      return !isNaN(t) ? t > now : true;
-    });
+    // Load from storage (keep expired items for creator result access)
+    const loaded = parseStored();
 
     // sort newest first by created_at (fallback to keep order)
     loaded.sort((a, b) => {
@@ -113,6 +108,12 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
 
             {/* Badges - fixed height */}
             <div className="mb-3 flex min-h-[28px] flex-wrap items-start gap-2">
+              {room.expires_at && Date.parse(room.expires_at) <= Date.now() && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                  <XCircle size={12} />
+                  {t.closedBadge}
+                </span>
+              )}
               {room.has_password && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
                   <Lock size={12} />
@@ -167,7 +168,7 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
                 href={room.share_token ? `/vote/${room.uuid}?share_token=${encodeURIComponent(room.share_token)}` : `/vote/${room.uuid}`}
                 className="flex items-center gap-1 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
               >
-                {t.viewPoll}
+                {room.expires_at && Date.parse(room.expires_at) <= Date.now() ? t.viewResults : t.viewPoll}
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </Link>
             </div>

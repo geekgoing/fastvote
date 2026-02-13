@@ -36,6 +36,7 @@ export interface VoteRoom {
   tags?: string[];
   allow_multiple?: boolean;
   expires_at?: string | null;
+  is_expired?: boolean;
 }
 
 export interface VoteResults {
@@ -199,9 +200,12 @@ export const api = {
     }),
 
   // Get current results
-  getResults: (uuid: string, fingerprint?: string) => {
-    const params = fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : '';
-    return fetchAPI<VoteResults>(`/rooms/${uuid}/results${params}`);
+  getResults: (uuid: string, fingerprint?: string, share_token?: string) => {
+    const searchParams = new URLSearchParams();
+    if (fingerprint) searchParams.set('fingerprint', fingerprint);
+    if (share_token) searchParams.set('share_token', share_token);
+    const qs = searchParams.toString();
+    return fetchAPI<VoteResults>(`/rooms/${uuid}/results${qs ? `?${qs}` : ''}`);
   },
 
   // Create a comment

@@ -5,6 +5,9 @@ from datetime import datetime, timedelta, timezone
 from app.database import get_redis
 from app.utils.security import hash_password
 
+# 투표 결과 보관 기간: 만료 후 7일간 생성자가 결과 확인 가능
+RESULT_RETENTION_TTL = 604800  # 7 days in seconds
+
 
 async def create_room(
     title: str,
@@ -43,11 +46,12 @@ async def create_room(
         from secrets import token_urlsafe
         room_data["share_token"] = token_urlsafe(32)
 
-    await redis.setex(f"room:{room_uuid}", ttl, json.dumps(room_data))
+    redis_ttl = ttl + RESULT_RETENTION_TTL
+    await redis.setex(f"room:{room_uuid}", redis_ttl, json.dumps(room_data))
 
     for option in options:
         await redis.hset(f"votes:{room_uuid}", option, 0)
-    await redis.expire(f"votes:{room_uuid}", ttl)
+    await redis.expire(f"votes:{room_uuid}", redis_ttl)
 
     # 인덱스 추가: 최신순
     await redis.zadd("rooms:list", {room_uuid: timestamp})
@@ -72,6 +76,15 @@ async def get_room(room_uuid: str) -> dict | None:
     if room_data:
         return json.loads(room_data)
     return None
+
+
+def is_room_expired(room: dict) -> bool:
+    """expires_at 기준으로 투표 마감 여부 확인"""
+    expires_at_str = room.get("expires_at")
+    if not expires_at_str:
+        return False
+    expires_at = datetime.fromisoformat(expires_at_str)
+    return expires_at <= datetime.now(timezone.utc)
 
 
 async def get_vote_results(room_uuid: str) -> dict:
@@ -115,17 +128,23 @@ async def get_room_list(
     # 유효한 방만 필터링 (만료되지 않은 방)
     valid_rooms = []
     expired_uuids = []
+    now = datetime.now(timezone.utc)
 
     for room_uuid in room_uuids:
         room = await get_room(room_uuid)
         if room:
-            # 비공개 방도 목록에 포함 (is_private 필터링 제거)
+            # expires_at이 지난 방은 공개 목록에서 제외
+            expires_at_str = room.get("expires_at")
+            if expires_at_str:
+                expires_at = datetime.fromisoformat(expires_at_str)
+                if expires_at <= now:
+                    continue
             # 검색 필터 (제목만)
             if search and search.lower() not in room.get("title", "").lower():
                 continue
             valid_rooms.append(room)
         else:
-            # 만료된 방은 인덱스에서 제거 예정
+            # Redis에서 완전 삭제된 방은 인덱스에서 제거 예정
             expired_uuids.append(room_uuid)
 
     # 만료된 방 인덱스 정리 (비동기로 처리)

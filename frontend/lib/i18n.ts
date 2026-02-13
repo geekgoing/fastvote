@@ -182,6 +182,8 @@ export const messages = {
       myPollsTotal: (count: number) => `총 ${count}개의 투표`,
       myPollsEmpty: "저장된 투표가 없습니다.",
       deletePoll: "삭제",
+      closedBadge: "마감됨",
+      viewResults: "결과 보기",
       },
     vote: {
       loading: "투표방 정보를 불러오는 중...",
@@ -240,6 +242,10 @@ export const messages = {
       justNow: "방금 전",
       minutesAgo: (n: number) => `${n}분 전`,
       hoursAgo: (n: number) => `${n}시간 전`,
+      pollClosed: "투표가 마감되었습니다",
+      pollClosedDescription: "이 투표는 마감되어 결과를 확인할 수 없습니다.",
+      closedBadge: "마감됨",
+      expired: "만료",
       errors: {
         notFound: "투표방을 찾을 수 없습니다",
         loadFailed: "투표방 불러오기에 실패했습니다",
@@ -420,6 +426,8 @@ export const messages = {
       myPollsTotal: (count: number) => `${count} poll${count !== 1 ? "s" : ""}`,
       myPollsEmpty: "No saved polls.",
       deletePoll: "Remove",
+      closedBadge: "Closed",
+      viewResults: "View results",
       },
     vote: {
       loading: "Loading vote room...",
@@ -478,6 +486,10 @@ export const messages = {
       justNow: "just now",
       minutesAgo: (n: number) => `${n}m ago`,
       hoursAgo: (n: number) => `${n}h ago`,
+      pollClosed: "This poll has closed",
+      pollClosedDescription: "This poll has ended and results are no longer available.",
+      closedBadge: "Closed",
+      expired: "Expired",
       errors: {
         notFound: "Vote room not found",
         loadFailed: "Failed to load vote room",
