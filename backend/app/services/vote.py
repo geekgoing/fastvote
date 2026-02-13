@@ -26,5 +26,5 @@ async def cast_vote(room_uuid: str, options: list[str], fingerprint: str, ip: st
     if room_ttl > 0:
         await redis.setex(voted_key, room_ttl, "1")
 
-    # 인기순 인덱스 업데이트 (투표 수 기준)
-    await update_room_total_votes(room_uuid, len(options))
+    # 인기순 인덱스 업데이트 (참여자 수 기준)
+    await update_room_total_votes(room_uuid, 1)
