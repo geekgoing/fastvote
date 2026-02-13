@@ -37,6 +37,7 @@ export interface VoteRoom {
   allow_multiple?: boolean;
   expires_at?: string | null;
   is_expired?: boolean;
+  total_votes?: number;
 }
 
 export interface VoteResults {

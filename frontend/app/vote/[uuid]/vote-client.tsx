@@ -474,7 +474,7 @@ export function VoteClient({ params }: PageProps) {
             <h1 className="text-2xl font-bold mb-3 pr-12">{room.title}</h1>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-sm text-white/90 flex-wrap">
-                <span>{t.totalVotes(totalVotes)}</span>
+                <span>{t.totalVotes(room.total_votes ?? totalVotes)}</span>
                 <span>•</span>
                 <span>{room.expires_at ? t.expiresIn(getExpirationHours(room.expires_at)) : t.unlimited}</span>
                 {room.tags && room.tags.length > 0 && (
