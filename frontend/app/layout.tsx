@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | FastVote",
   },
   description: "빠른 익명 투표 - 간편하게 투표를 만들고 공유하세요",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fastvote.geekgoing.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fastvote.geekgoing.org"),
   openGraph: {
     title: "FastVote",
     description: "빠른 익명 투표 - 간편하게 투표를 만들고 공유하세요",
