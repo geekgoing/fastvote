@@ -288,7 +288,7 @@ export function VoteClient({ params }: PageProps) {
         content: commentContent.trim(),
         nickname: commentNickname.trim() || undefined,
       });
-      setComments([...comments, newComment]);
+      setComments([newComment, ...comments]);
       setCommentContent('');
       setCommentNickname('');
     } catch (err) {
@@ -779,7 +779,7 @@ export function VoteClient({ params }: PageProps) {
                 </div>
               </form>
 
-              {/* Comments List */}
+              {/* Comments List (newest first) */}
               <div key={locale} className="space-y-3">
                 {comments.length === 0 ? (
                   <div className="text-center py-8 text-gray-400 dark:text-gray-500">
@@ -787,7 +787,7 @@ export function VoteClient({ params }: PageProps) {
                     <p className="text-sm">{t.noCommentsYet}</p>
                   </div>
                 ) : (
-                  comments.map((comment) => (
+                  [...comments].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((comment) => (
                     <div
                       key={comment.id}
                       className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm"
