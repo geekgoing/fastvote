@@ -1,183 +1,59 @@
 # FastVote
 
-로그인 없이 빠르게 익명 투표를 생성하고 공유할 수 있는 실시간 투표 플랫폼
+로그인 없이 링크 하나로 시작하는 실시간 익명 투표 플랫폼입니다.  
+빠르게 질문을 만들고, 바로 공유하고, 결과를 즉시 확인할 수 있습니다.
 
-## 주요 기능
+Live Demo: https://fastvote.geekgoing.org/
 
-### 즉석 투표방 생성
-- 주제와 선택지를 입력하면 고유한 UUID 기반의 투표방 생성
-- 임시 공유 링크 자동 생성 (`/vote/{uuid}`)
-- 회원가입/로그인 불필요
+![FastVote Preview](./frontend/public/fastvote.png)
 
-### 다양한 투표 옵션
-- **복수 선택**: 여러 옵션에 투표 가능
-- **비공개 투표**: 목록에 표시되지 않고 링크로만 접근
-- **비밀번호 보호**: 투표방 입장 시 비밀번호 검증
-- **태그 시스템**: 투표에 태그 추가하여 분류
+## 왜 만들었나
 
-### 실시간 결과
-- WebSocket을 통한 실시간 투표 결과 업데이트
-- 막대/원형 그래프로 결과 시각화
-- 새로고침 없이 즉시 결과 확인
+FastVote는 "지금 당장 의견을 모아야 하는 상황"을 위해 만들었습니다.
 
-### 댓글 시스템
-- 익명 또는 닉네임으로 댓글 작성
-- 투표에 대한 의견 공유
+- 회원가입 없이 바로 시작
+- 모바일에서도 바로 투표
+- 결과를 실시간으로 확인
+- 투표 종료 시점(TTL) 자동 관리
 
-### 다국어 지원
-- 한국어/영어 지원
-- 언어 설정 쿠키 저장
+## 핵심 기능
 
-### 다크 모드
-- 시스템 설정 연동
-- 수동 테마 전환
+- **초간단 생성**: 제목/선택지만 입력하면 UUID 기반 투표 링크 생성
+- **실시간 반영**: WebSocket으로 새로고침 없이 결과 업데이트
+- **유연한 공개 범위**: 공개/비공개, 비밀번호 보호, 태그 분류 지원
+- **참여 확장**: 익명 댓글, 복수 선택, 한국어/영어, 다크 모드 제공
 
-### 자동 데이터 만료
-- Redis TTL을 활용한 투표 데이터 수명 관리
-- 1시간 ~ 24시간 만료 시간 설정
+## 사용 시나리오
 
----
+- 팀 회의에서 빠른 의사결정
+- 스터디/커뮤니티에서 익명 선호도 조사
+- 행사 아이스브레이킹 또는 즉석 Q&A
 
-## 기술 스택
+## 빠르게 실행하기
 
-| 구분 | 기술 |
-|------|------|
-| **Frontend** | Next.js 16, React 19, TailwindCSS 4, Recharts |
-| **Backend** | FastAPI, Python 3.12, uv |
-| **Database** | Redis (In-memory, TTL 지원) |
-| **실시간 통신** | WebSocket |
-| **컨테이너** | Docker, Docker Compose |
-
----
-
-## 아키텍처
-
-### 로컬 개발
-```
-┌─────────────────┐     WebSocket      ┌─────────────────┐
-│                 │◄──────────────────►│                 │
-│    Frontend     │                    │     Backend     │
-│   (Next.js)     │────── REST ───────►│   (FastAPI)     │
-│   Port: 3000    │                    │   Port: 8000    │
-└─────────────────┘                    └────────┬────────┘
-                                                │
-                                       ┌────────▼────────┐
-                                       │      Redis      │
-                                       │   Port: 6379    │
-                                       └─────────────────┘
-```
-
-### Kubernetes (k3s + ArgoCD)
-```
-                    ┌─────────────────────────────────────┐
-                    │            Ingress                  │
-    Browser ───────►│  /api/* /ws/* → backend:8000       │
-                    │  /*           → frontend:3000       │
-                    └───────────────┬─────────────────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                     │
-              ▼                     ▼                     ▼
-     ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
-     │    Frontend     │   │     Backend     │   │      Redis      │
-     │   (Next.js)     │   │   (FastAPI)     │   │     (alpine)    │
-     └─────────────────┘   └────────┬────────┘   └─────────────────┘
-                                    │                     ▲
-                                    └─────────────────────┘
-```
-
----
-
-## 시작하기
-
-### 사전 요구사항
-- Docker & Docker Compose
-
-### 실행
 ```bash
-# 프로젝트 클론
-git clone <repository-url>
-cd fastvote
-
-# 전체 서비스 실행
 docker-compose up -d
-
-# 로그 확인
-docker-compose logs -f
 ```
 
-### 로컬 개발
-```bash
-# Backend
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload --port 8000
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
 
-# Frontend
-cd frontend
-npm install
-npm run dev
-```
+자세한 실행 방법은 `docs/getting-started.md`에서 확인할 수 있습니다.
 
-### 접속
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API 문서**: http://localhost:8000/docs
+## 배포 주소
 
----
+- Production: `https://fastvote.geekgoing.org/`
 
-## API 엔드포인트
+## 문서
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| `POST` | `/api/rooms` | 투표방 생성 |
-| `GET` | `/api/rooms` | 투표방 목록 조회 |
-| `GET` | `/api/rooms/{uuid}` | 투표방 정보 조회 |
-| `POST` | `/api/rooms/{uuid}/verify` | 비밀방 비밀번호 검증 |
-| `POST` | `/api/rooms/{uuid}/vote` | 투표 제출 |
-| `GET` | `/api/rooms/{uuid}/results` | 투표 결과 조회 |
-| `POST` | `/api/rooms/{uuid}/comments` | 댓글 작성 |
-| `GET` | `/api/rooms/{uuid}/comments` | 댓글 목록 조회 |
-| `WS` | `/ws/rooms/{uuid}` | 실시간 결과 구독 |
+- `docs/README.md`: 문서 인덱스
+- `docs/architecture.md`: 시스템 아키텍처
+- `docs/tech-stack.md`: 기술 스택
+- `docs/api.md`: API 엔드포인트
+- `docs/project-structure.md`: 프로젝트 구조
+- `docs/getting-started.md`: 로컬 개발/실행 가이드
 
----
+## License
 
-## 프로젝트 구조
-
-```
-fastvote/
-├── docker-compose.yml
-├── README.md
-├── backend/
-│   ├── Dockerfile
-│   ├── pyproject.toml
-│   └── app/
-│       ├── main.py
-│       ├── config.py
-│       ├── database.py
-│       ├── models/
-│       ├── routers/
-│       ├── services/
-│       └── utils/
-└── frontend/
-    ├── Dockerfile
-    ├── package.json
-    ├── app/
-    │   ├── page.tsx          # 메인 페이지
-    │   ├── create/           # 투표 생성
-    │   ├── polls/            # 투표 목록
-    │   └── vote/[uuid]/      # 투표 페이지
-    ├── components/
-    │   ├── ui/               # 공통 UI 컴포넌트
-    │   ├── site/             # 사이트 컴포넌트
-    │   └── providers/        # Context Provider
-    └── lib/
-        ├── api.ts            # API 클라이언트
-        └── i18n.ts           # 다국어 지원
-```
-
----
-
-## 라이선스
-
-MIT License
+MIT
