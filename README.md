@@ -1,58 +1,98 @@
-# FastVote
+<p align="center">
+  <img src="docs/banner.svg" alt="FastVote banner" width="100%" />
+</p>
 
-로그인 없이 링크 하나로 시작하는 실시간 익명 투표 플랫폼입니다.  
-빠르게 질문을 만들고, 바로 공유하고, 결과를 즉시 확인할 수 있습니다.
+<h1 align="center">FastVote</h1>
 
-Live Demo: https://fastvote.geekgoing.org/
+<p align="center">
+  Anonymous realtime voting for situations where a decision needs to happen now.
+</p>
 
-![FastVote Preview](./frontend/public/fastvote.png)
+<p align="center">
+  <a href="https://fastvote.geekgoing.org/"><img alt="Demo" src="https://img.shields.io/badge/Demo-fastvote.geekgoing.org-10B981"></a>
+  <a href="#quick-start"><img alt="Frontend" src="https://img.shields.io/badge/Frontend-Next.js%2016-black?logo=next.js"></a>
+  <a href="#quick-start"><img alt="Backend" src="https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white"></a>
+  <a href="#quick-start"><img alt="Redis" src="https://img.shields.io/badge/Redis-TTL-red?logo=redis&logoColor=white"></a>
+</p>
 
-## 왜 만들었나
+<p align="center">
+  <code>docker-compose up -d</code>
+</p>
 
-FastVote는 "지금 당장 의견을 모아야 하는 상황"을 위해 만들었습니다.
+FastVote removes sign-up friction from short-lived voting. Create a poll, share the link, and watch results update live.
 
-- 회원가입 없이 바로 시작
-- 모바일에서도 바로 투표
-- 결과를 실시간으로 확인
-- 투표 종료 시점(TTL) 자동 관리
+## At a Glance
 
-## 핵심 기능
+- UUID-based room creation with anonymous participation
+- Redis-backed TTL lifecycle plus WebSocket result updates
+- Public/private polls, password protection, comments, and multi-select support
 
-- **초간단 생성**: 제목/선택지만 입력하면 UUID 기반 투표 링크 생성
-- **실시간 반영**: WebSocket으로 새로고침 없이 결과 업데이트
-- **유연한 공개 범위**: 공개/비공개, 비밀번호 보호, 태그 분류 지원
-- **참여 확장**: 익명 댓글, 복수 선택, 한국어/영어, 다크 모드 제공
+## Screenshot
 
-## 사용 시나리오
+![FastVote UI](docs/image.png)
 
-- 팀 회의에서 빠른 의사결정
-- 스터디/커뮤니티에서 익명 선호도 조사
-- 행사 아이스브레이킹 또는 즉석 Q&A
+## Why FastVote
 
-## 빠르게 실행하기
+- Short-lived decisions need less setup, not more
+- Result updates are designed around immediacy instead of refresh cycles
+- The product supports both casual community use and structured team voting
+
+## Core Features
+
+- Anonymous poll creation
+- Live result updates over WebSocket
+- Public / private visibility controls
+- Password-protected polls
+- Multi-select voting
+- Anonymous comments
+- Korean / English locale support
+- Dark mode
+
+## Quick Start
 
 ```bash
 docker-compose up -d
 ```
 
+Local services:
+
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8000`
-- API Docs: `http://localhost:8000/docs`
+- API docs: `http://localhost:8000/docs`
 
-자세한 실행 방법은 `docs/getting-started.md`에서 확인할 수 있습니다.
+For more setup detail, see `docs/getting-started.md`.
 
-## 배포 주소
+## Usage
 
-- Production: `https://fastvote.geekgoing.org/`
+1. Create a poll from `/create`
+2. Share the generated room link
+3. Watch live results without refreshing
+4. Optionally restrict access with visibility or password rules
 
-## 문서
+## Project Structure
 
-- `docs/README.md`: 문서 인덱스
-- `docs/architecture.md`: 시스템 아키텍처
-- `docs/tech-stack.md`: 기술 스택
-- `docs/api.md`: API 엔드포인트
-- `docs/project-structure.md`: 프로젝트 구조
-- `docs/getting-started.md`: 로컬 개발/실행 가이드
+- `frontend/`: Next.js application
+- `backend/`: FastAPI API and WebSocket server
+- `docs/`: architecture, setup, API, and project notes
+
+## Contributing
+
+Local checks:
+
+```bash
+cd frontend && npm run lint
+cd frontend && npm run test:e2e
+cd backend && uv run pytest
+```
+
+Issue reports should include:
+
+- Browser and OS
+- Reproduction steps
+- Expected vs actual behavior
+- Whether the issue happened in frontend UI, backend API, or WebSocket updates
+
+Recommended commit prefixes: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 
 ## License
 
