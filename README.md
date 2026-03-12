@@ -27,9 +27,34 @@ FastVote removes sign-up friction from short-lived voting. Create a poll, share 
 - Redis-backed TTL lifecycle plus WebSocket result updates
 - Public/private polls, password protection, comments, and multi-select support
 
-## Screenshot
+## Screenshots
 
-![FastVote UI](docs/image.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/main.png" alt="FastVote main page" width="100%" />
+      <br />
+      <strong>Main</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/create.png" alt="FastVote create page" width="100%" />
+      <br />
+      <strong>Create</strong>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/vote.png" alt="FastVote vote page" width="100%" />
+      <br />
+      <strong>Vote</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/polls.png" alt="FastVote polls page" width="100%" />
+      <br />
+      <strong>Polls</strong>
+    </td>
+  </tr>
+</table>
 
 ## Why FastVote
 
