@@ -38,6 +38,7 @@ async def create_room(
         "title": title,
         "options": options,
         "participants": participants,
+        "remaining_participants": participants.copy(),
         "option_allowed_participants": option_allowed_participants,
         "created_at": created_at.isoformat(),
         "expires_at": expires_at.isoformat(),
@@ -84,6 +85,14 @@ async def get_room(room_uuid: str) -> dict | None:
     if room_data:
         return json.loads(room_data)
     return None
+
+
+def get_remaining_participants(room: dict) -> list[str]:
+    """아직 투표하지 않은 제한 투표 참여자 목록"""
+    remaining_participants = room.get("remaining_participants")
+    if isinstance(remaining_participants, list):
+        return remaining_participants
+    return room.get("participants", [])
 
 
 def is_room_expired(room: dict) -> bool:
@@ -197,6 +206,26 @@ async def _cleanup_expired_rooms(expired_uuids: list[str]) -> None:
         await redis.zrem("rooms:popular", room_uuid)
         # 태그 인덱스도 정리해야 하지만, 태그를 모르므로 스킵
         # (방 정보가 이미 삭제되어 태그 정보를 알 수 없음)
+
+
+async def record_room_vote(room_uuid: str, participant: str | None = None) -> None:
+    """방의 총 투표수와 제한 투표 남은 참여자 목록 업데이트"""
+    redis = get_redis()
+    room = await get_room(room_uuid)
+    if room:
+        room["total_votes"] = room.get("total_votes", 0) + 1
+
+        if participant and room.get("participants"):
+            remaining_participants = get_remaining_participants(room)
+            room["remaining_participants"] = [
+                name for name in remaining_participants if name != participant
+            ]
+
+        ttl = await redis.ttl(f"room:{room_uuid}")
+        if ttl > 0:
+            await redis.setex(f"room:{room_uuid}", ttl, json.dumps(room))
+            # 인기순 인덱스 업데이트
+            await redis.zadd("rooms:popular", {room_uuid: room["total_votes"]})
 
 
 async def update_room_total_votes(room_uuid: str, increment: int = 1) -> None:

@@ -1,6 +1,6 @@
 from app.database import get_redis
 from app.utils.security import generate_vote_hash
-from app.services.room import update_room_total_votes
+from app.services.room import record_room_vote
 
 
 async def has_voted(room_uuid: str, fingerprint: str, ip: str) -> bool:
@@ -11,7 +11,13 @@ async def has_voted(room_uuid: str, fingerprint: str, ip: str) -> bool:
     return await redis.exists(voted_key)
 
 
-async def cast_vote(room_uuid: str, options: list[str], fingerprint: str, ip: str) -> None:
+async def cast_vote(
+    room_uuid: str,
+    options: list[str],
+    fingerprint: str,
+    ip: str,
+    participant: str | None = None,
+) -> None:
     """투표 기록 (복수 선택 지원)"""
     redis = get_redis()
 
@@ -26,5 +32,5 @@ async def cast_vote(room_uuid: str, options: list[str], fingerprint: str, ip: st
     if room_ttl > 0:
         await redis.setex(voted_key, room_ttl, "1")
 
-    # 인기순 인덱스 업데이트 (참여자 수 기준)
-    await update_room_total_votes(room_uuid, 1)
+    # 인기순 인덱스 업데이트 및 제한 투표 참여자 소진 처리
+    await record_room_vote(room_uuid, participant)
