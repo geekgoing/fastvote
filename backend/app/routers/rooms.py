@@ -1,7 +1,14 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from app.models.schemas import RoomCreate, VoteRequest, PasswordVerifyRequest, SortOrder, RoomListResponse, CommentCreate, Comment
-from app.services.room import create_room, get_room, get_vote_results, get_room_list, is_room_expired
+from app.services.room import (
+    create_room,
+    get_remaining_participants,
+    get_room,
+    get_room_list,
+    get_vote_results,
+    is_room_expired,
+)
 from app.services.vote import has_voted, cast_vote
 from app.services.comment import create_comment, get_comments
 from app.utils.security import verify_password
@@ -9,6 +16,24 @@ from app.routers.websocket import broadcast_results
 from app.database import get_redis
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
+
+
+def serialize_room_response(room: dict) -> dict:
+    """클라이언트에는 제한 투표의 남은 참여자만 노출한다."""
+    response = room.copy()
+    response.pop("password_hash", None)
+    # Do not expose share_token on GET room
+    response.pop("share_token", None)
+    response["is_expired"] = is_room_expired(room)
+
+    is_restricted = bool(room.get("participants", []))
+    response["is_restricted"] = is_restricted
+    if is_restricted:
+        remaining_participants = get_remaining_participants(room)
+        response["participants"] = remaining_participants
+        response["remaining_participants"] = remaining_participants
+
+    return response
 
 
 @router.get("", response_model=RoomListResponse)
@@ -52,12 +77,7 @@ async def get_room_info(room_uuid: str):
     if not room:
         raise HTTPException(status_code=404, detail="투표방을 찾을 수 없습니다")
 
-    response = room.copy()
-    response.pop("password_hash", None)
-    # Do not expose share_token on GET room
-    response.pop("share_token", None)
-    response["is_expired"] = is_room_expired(room)
-    return response
+    return serialize_room_response(room)
 
 
 @router.post("/{room_uuid}/verify")
@@ -100,12 +120,17 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
         raise HTTPException(status_code=400, detail="이 투표는 복수 선택이 허용되지 않습니다")
 
     participants = room.get("participants", [])
+    participant_to_remove = None
     if participants:
         if not vote_request.participant:
             raise HTTPException(status_code=400, detail="참여자를 선택해주세요")
 
         if vote_request.participant not in participants:
             raise HTTPException(status_code=400, detail="참여 인원에 없는 이름입니다")
+
+        remaining_participants = get_remaining_participants(room)
+        if vote_request.participant not in remaining_participants:
+            raise HTTPException(status_code=409, detail="이미 투표한 참여자입니다")
 
         option_allowed_participants = room.get("option_allowed_participants", [])
         for option in vote_request.options:
@@ -120,12 +145,19 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
                     status_code=403,
                     detail=f"{vote_request.participant}님은 선택할 수 없는 옵션입니다: {option}",
                 )
+        participant_to_remove = vote_request.participant
 
     client_ip = request.client.host
     if await has_voted(room_uuid, vote_request.fingerprint, client_ip):
         raise HTTPException(status_code=409, detail="이미 투표하셨습니다")
 
-    await cast_vote(room_uuid, vote_request.options, vote_request.fingerprint, client_ip)
+    await cast_vote(
+        room_uuid,
+        vote_request.options,
+        vote_request.fingerprint,
+        client_ip,
+        participant_to_remove,
+    )
     await broadcast_results(room_uuid)
 
     return {"success": True, "message": "투표가 완료되었습니다"}
