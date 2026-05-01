@@ -31,6 +31,7 @@ function saveStored(list: MyPollRecord[]) {
 
 export default function MyPolls({ localeCookie }: { localeCookie?: string | null }) {
   const [items, setItems] = useState<MyPollRecord[]>([]);
+  const [nowMs] = useState(() => Date.now());
 
   useEffect(() => {
     // Load from storage (keep expired items for creator result access)
@@ -44,22 +45,26 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
     });
 
     const limited = loaded.slice(0, MAX_ITEMS);
-    setItems(limited);
-    saveStored(limited);
+    const timeoutId = window.setTimeout(() => {
+      setItems(limited);
+      saveStored(limited);
 
-    // Background verification: remove items that return 404 from server
-    limited.forEach((record) => {
-      api.getRoom(record.uuid).catch((err) => {
-        // If 404, remove from storage and state. Do not block rendering.
-        if (err instanceof APIError && err.status === 404) {
-          setItems((prev) => {
-            const next = prev.filter((p) => p.uuid !== record.uuid);
-            saveStored(next);
-            return next;
-          });
-        }
+      // Background verification: remove items that return 404 from server
+      limited.forEach((record) => {
+        api.getRoom(record.uuid).catch((err) => {
+          // If 404, remove from storage and state. Do not block rendering.
+          if (err instanceof APIError && err.status === 404) {
+            setItems((prev) => {
+              const next = prev.filter((p) => p.uuid !== record.uuid);
+              saveStored(next);
+              return next;
+            });
+          }
+        });
       });
-    });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   // locale for messages
@@ -108,7 +113,7 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
 
             {/* Badges - fixed height */}
             <div className="mb-3 flex min-h-[28px] flex-wrap items-start gap-2">
-              {room.expires_at && Date.parse(room.expires_at) <= Date.now() && (
+              {room.expires_at && Date.parse(room.expires_at) <= nowMs && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
                   <XCircle size={12} />
                   {t.closedBadge}
@@ -168,7 +173,7 @@ export default function MyPolls({ localeCookie }: { localeCookie?: string | null
                 href={room.share_token ? `/vote/${room.uuid}?share_token=${encodeURIComponent(room.share_token)}` : `/vote/${room.uuid}`}
                 className="flex items-center gap-1 text-sm font-medium text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
               >
-                {room.expires_at && Date.parse(room.expires_at) <= Date.now() ? t.viewResults : t.viewPoll}
+                {room.expires_at && Date.parse(room.expires_at) <= nowMs ? t.viewResults : t.viewPoll}
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </Link>
             </div>

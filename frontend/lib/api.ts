@@ -31,6 +31,8 @@ export interface VoteRoom {
   uuid: string;
   title: string;
   options: string[];
+  participants?: string[];
+  option_allowed_participants?: string[][];
   has_password: boolean;
   created_at: string;
   tags?: string[];
@@ -51,11 +53,14 @@ export interface VoteResults {
 export interface VoteRequest {
   options: string[];
   fingerprint: string;
+  participant?: string;
 }
 
 export interface CreateRoomRequest {
   title: string;
   options: string[];
+  participants?: string[];
+  option_allowed_participants?: string[][];
   password?: string;
   ttl: number;
   tags: string[];
@@ -194,10 +199,10 @@ export const api = {
     }),
 
   // Submit vote
-  vote: (uuid: string, options: string[], fingerprint: string) =>
+  vote: (uuid: string, options: string[], fingerprint: string, participant?: string) =>
     fetchAPI<{ success: boolean; message: string }>(`/rooms/${uuid}/vote`, {
       method: 'POST',
-      body: JSON.stringify({ options, fingerprint }),
+      body: JSON.stringify({ options, fingerprint, participant }),
     }),
 
   // Get current results

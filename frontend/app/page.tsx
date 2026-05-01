@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 
 import { Navbar } from "@/components/site/navbar";
 import { useLocale } from "@/components/providers/locale-provider";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CreateModeDialog } from "@/components/site/create-mode-dialog";
 
 export default function Home() {
   const { messages } = useLocale();
@@ -33,11 +34,9 @@ export default function Home() {
           </p>
 
             <div className="mt-8 flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row">
-            <Button asChild size="lg">
-              <Link href="/create" className="flex items-center gap-2">
-                {t.primaryCta} <ArrowRight size={18} />
-              </Link>
-            </Button>
+            <CreateModeDialog size="lg" showArrow>
+              {t.primaryCta}
+            </CreateModeDialog>
             <Button asChild size="lg" variant="secondary">
               <Link href="/polls">{t.secondaryCta}</Link>
             </Button>
@@ -121,9 +120,9 @@ export default function Home() {
                 <p className="mt-2 text-sm text-emerald-50">{t.ctaDescription}</p>
               </div>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Button asChild size="lg" className="bg-white text-emerald-600 hover:bg-white/90 dark:bg-slate-800 dark:text-emerald-300 dark:hover:bg-slate-700">
-                  <Link href="/create" className="flex items-center justify-center">{t.ctaPrimary}</Link>
-                </Button>
+                <CreateModeDialog size="lg" className="bg-white text-emerald-600 hover:bg-white/90 dark:bg-slate-800 dark:text-emerald-300 dark:hover:bg-slate-700">
+                  {t.ctaPrimary}
+                </CreateModeDialog>
                 <Button asChild size="lg" className="bg-white text-emerald-600 hover:bg-white/90 dark:bg-slate-800 dark:text-emerald-300 dark:hover:bg-slate-700">
                   <Link href="/polls">{t.ctaSecondary}</Link>
                 </Button>

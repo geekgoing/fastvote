@@ -39,7 +39,9 @@ async def create_room_endpoint(room: RoomCreate):
         ttl=room.ttl,
         tags=room.tags,
         allow_multiple=room.allow_multiple,
-        is_private=room.is_private
+        is_private=room.is_private,
+        participants=room.participants,
+        option_allowed_participants=room.option_allowed_participants,
     )
 
 
@@ -96,6 +98,28 @@ async def vote(room_uuid: str, vote_request: VoteRequest, request: Request):
     # 복수 선택 허용 여부 확인
     if not room.get("allow_multiple", False) and len(vote_request.options) > 1:
         raise HTTPException(status_code=400, detail="이 투표는 복수 선택이 허용되지 않습니다")
+
+    participants = room.get("participants", [])
+    if participants:
+        if not vote_request.participant:
+            raise HTTPException(status_code=400, detail="참여자를 선택해주세요")
+
+        if vote_request.participant not in participants:
+            raise HTTPException(status_code=400, detail="참여 인원에 없는 이름입니다")
+
+        option_allowed_participants = room.get("option_allowed_participants", [])
+        for option in vote_request.options:
+            option_index = room["options"].index(option)
+            if option_index < len(option_allowed_participants):
+                allowed_participants = option_allowed_participants[option_index]
+            else:
+                allowed_participants = participants
+
+            if vote_request.participant not in allowed_participants:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"{vote_request.participant}님은 선택할 수 없는 옵션입니다: {option}",
+                )
 
     client_ip = request.client.host
     if await has_voted(room_uuid, vote_request.fingerprint, client_ip):

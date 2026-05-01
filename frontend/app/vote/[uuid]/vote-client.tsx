@@ -36,9 +36,10 @@ export function VoteClient({ params }: PageProps) {
   const [passwordError, setPasswordError] = useState('');
 
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selectedParticipant, setSelectedParticipant] = useState('');
+  const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
   const [voteError, setVoteError] = useState('');
 
-  const [copySuccess, setCopySuccess] = useState(false);
   const [shouldConnectWs, setShouldConnectWs] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -63,6 +64,9 @@ export function VoteClient({ params }: PageProps) {
       try {
         const data = await api.getRoom(uuid);
         setRoom(data);
+        const hasParticipants = (data.participants?.length ?? 0) > 0;
+        setSelectedParticipant('');
+        setIsParticipantModalOpen(hasParticipants);
 
         const params = new URLSearchParams(window.location.search);
         const shareToken = params.get('share_token');
@@ -91,7 +95,7 @@ export function VoteClient({ params }: PageProps) {
            if (shareToken) {
              try {
                await api.verifyPassword(uuid, undefined, shareToken);
-             } catch (err) {
+             } catch {
                setState('password');
                return;
              }
@@ -138,7 +142,7 @@ export function VoteClient({ params }: PageProps) {
     };
 
     loadRoom();
-  }, [uuid]);
+  }, [uuid, t.errors.loadFailed, t.errors.notFound]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
@@ -233,8 +237,14 @@ export function VoteClient({ params }: PageProps) {
     setVoteError('');
     const fingerprint = getFingerprint();
 
+    if ((room?.participants?.length ?? 0) > 0 && !selectedParticipant) {
+      setVoteError('참여자를 선택해주세요.');
+      setIsParticipantModalOpen(true);
+      return;
+    }
+
     try {
-      await api.vote(uuid, selectedOptions, fingerprint);
+      await api.vote(uuid, selectedOptions, fingerprint, selectedParticipant || undefined);
       setState('voted');
       showToast(t.voteCompleted);
       // Confetti effect
@@ -248,6 +258,8 @@ export function VoteClient({ params }: PageProps) {
       if (err instanceof APIError && err.status === 409) {
         setVoteError(t.voteErrors.alreadyVoted);
         setState('voted');
+      } else if (err instanceof APIError) {
+        setVoteError(err.message || t.voteErrors.submitFailed);
       } else {
         setVoteError(t.voteErrors.submitFailed);
       }
@@ -258,9 +270,7 @@ export function VoteClient({ params }: PageProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setCopySuccess(true);
       showToast(t.copied);
-      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -319,6 +329,34 @@ export function VoteClient({ params }: PageProps) {
     const diffMs = expires.getTime() - now.getTime();
     const hours = Math.ceil(diffMs / (1000 * 60 * 60));
     return Math.max(1, hours);
+  };
+
+  const canParticipantVoteForOption = (
+    participant: string,
+    optionIndex: number
+  ): boolean => {
+    if (!room || (room.participants?.length ?? 0) === 0) return true;
+    if (!participant) return false;
+
+    const allowedParticipants = room.option_allowed_participants?.[optionIndex];
+    const fallbackParticipants = room.participants ?? [];
+    const optionParticipants = Array.isArray(allowedParticipants)
+      ? allowedParticipants
+      : fallbackParticipants;
+
+    return optionParticipants.includes(participant);
+  };
+
+  const handleParticipantSelect = (participant: string) => {
+    setSelectedParticipant(participant);
+    setIsParticipantModalOpen(false);
+    setVoteError('');
+    setSelectedOptions((current) =>
+      current.filter((option) => {
+        const optionIndex = room?.options.indexOf(option) ?? -1;
+        return optionIndex >= 0 && canParticipantVoteForOption(participant, optionIndex);
+      })
+    );
   };
 
   // Loading state
@@ -444,10 +482,51 @@ export function VoteClient({ params }: PageProps) {
     const winnerOption = getWinnerOption();
     const isVoting = state === "voting";
     const isVoted = state === "voted";
+    const isRestrictedPoll = (room.participants?.length ?? 0) > 0;
+    const shouldShowParticipantModal =
+      isVoting && isRestrictedPoll && isParticipantModalOpen;
 
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
+        {shouldShowParticipantModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-white/15 bg-white p-6 shadow-2xl dark:bg-slate-900">
+              <div className="mb-5">
+                <Badge className="mb-3">참여자 선택</Badge>
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                  투표할 이름을 선택해주세요
+                </h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-300">
+                  선택한 이름에 따라 투표 가능한 선택지가 달라집니다.
+                </p>
+              </div>
+              <div className="grid gap-2">
+                {room.participants?.map((participant) => (
+                  <button
+                    key={participant}
+                    type="button"
+                    onClick={() => handleParticipantSelect(participant)}
+                    className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-left text-sm font-semibold text-zinc-800 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:hover:border-emerald-400/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-200"
+                  >
+                    <span>{participant}</span>
+                    <User size={16} className="text-zinc-400" />
+                  </button>
+                ))}
+              </div>
+              {selectedParticipant && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="mt-4 w-full"
+                  onClick={() => setIsParticipantModalOpen(false)}
+                >
+                  닫기
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
         <div className="mx-auto max-w-3xl px-4 py-8">
           {/* Back to List */}
           <Button
@@ -532,11 +611,32 @@ export function VoteClient({ params }: PageProps) {
                   <h2 data-testid="vote-title" className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     {t.voteTitle}
                   </h2>
+                  {isRestrictedPoll && (
+                    <div className="mb-4 flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm dark:border-emerald-400/30 dark:bg-emerald-500/10 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="font-medium text-emerald-800 dark:text-emerald-100">
+                        참여자: {selectedParticipant || '미선택'}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsParticipantModalOpen(true)}
+                        className="bg-white/80 dark:bg-slate-950/80"
+                      >
+                        참여자 변경
+                      </Button>
+                    </div>
+                  )}
                   <form onSubmit={handleVoteSubmit} className="space-y-4">
                   <div className="space-y-3">
-                    {room.options.map((option) => {
+                    {room.options.map((option, optionIndex) => {
                       const isSelected = selectedOptions.includes(option);
+                      const isDisabled =
+                        isRestrictedPoll &&
+                        !canParticipantVoteForOption(selectedParticipant, optionIndex);
                       const handleToggle = () => {
+                        if (isDisabled) return;
+
                         if (room.allow_multiple) {
                           setSelectedOptions(prev =>
                             prev.includes(option)
@@ -551,17 +651,21 @@ export function VoteClient({ params }: PageProps) {
                         <label
                           key={option}
                           className={
-                            "flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all" +
-                            (isSelected
+                            "flex items-center gap-3 rounded-xl border-2 p-4 transition-all" +
+                            (isDisabled
+                              ? " cursor-not-allowed border-gray-200 bg-gray-100 opacity-60 dark:border-gray-800 dark:bg-slate-800"
+                              : isSelected
                               ? " border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10"
-                              : " border-gray-200 bg-white hover:border-emerald-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-emerald-400/40")
+                              : " cursor-pointer border-gray-200 bg-white hover:border-emerald-200 dark:border-gray-700 dark:bg-slate-900 dark:hover:border-emerald-400/40")
                           }
                         >
                           <span
                             className={
                               "flex h-5 w-5 items-center justify-center border-2" +
                               (room.allow_multiple ? " rounded" : " rounded-full") +
-                              (isSelected
+                              (isDisabled
+                                ? " border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-slate-800"
+                                : isSelected
                                 ? " border-emerald-500 bg-emerald-500"
                                 : " border-gray-300 bg-white dark:border-gray-600 dark:bg-slate-900")
                             }
@@ -575,12 +679,18 @@ export function VoteClient({ params }: PageProps) {
                           <span className="text-base font-medium text-gray-900 dark:text-gray-100 flex-1">
                             {option}
                           </span>
+                          {isDisabled && (
+                            <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-500 dark:bg-gray-700 dark:text-gray-300">
+                              선택 불가
+                            </span>
+                          )}
                           <input
                             type={room.allow_multiple ? "checkbox" : "radio"}
                             name="vote"
                             value={option}
                             checked={isSelected}
                             onChange={handleToggle}
+                            disabled={isDisabled}
                             className="sr-only"
                           />
                         </label>
@@ -597,7 +707,7 @@ export function VoteClient({ params }: PageProps) {
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={selectedOptions.length === 0}
+                    disabled={selectedOptions.length === 0 || (isRestrictedPoll && !selectedParticipant)}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500"
                   >
                     {t.submit}
