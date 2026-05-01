@@ -32,7 +32,9 @@ export interface VoteRoom {
   title: string;
   options: string[];
   participants?: string[];
+  remaining_participants?: string[];
   option_allowed_participants?: string[][];
+  is_restricted?: boolean;
   has_password: boolean;
   created_at: string;
   tags?: string[];

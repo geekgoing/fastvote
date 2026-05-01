@@ -52,6 +52,12 @@ export function VoteClient({ params }: PageProps) {
 
   const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
+  const getSelectableParticipants = (targetRoom: VoteRoom | null) =>
+    targetRoom?.remaining_participants ?? targetRoom?.participants ?? [];
+
+  const isRestrictedRoom = (targetRoom: VoteRoom | null) =>
+    Boolean(targetRoom?.is_restricted || (targetRoom?.participants?.length ?? 0) > 0);
+
   // Toast helper
   const showToast = (message: string) => {
     setToast({ message, visible: true });
@@ -64,9 +70,10 @@ export function VoteClient({ params }: PageProps) {
       try {
         const data = await api.getRoom(uuid);
         setRoom(data);
-        const hasParticipants = (data.participants?.length ?? 0) > 0;
+        const selectableParticipants = data.remaining_participants ?? data.participants ?? [];
+        const isRestrictedPoll = Boolean(data.is_restricted || selectableParticipants.length > 0);
         setSelectedParticipant('');
-        setIsParticipantModalOpen(hasParticipants);
+        setIsParticipantModalOpen(isRestrictedPoll);
 
         const params = new URLSearchParams(window.location.search);
         const shareToken = params.get('share_token');
@@ -237,7 +244,7 @@ export function VoteClient({ params }: PageProps) {
     setVoteError('');
     const fingerprint = getFingerprint();
 
-    if ((room?.participants?.length ?? 0) > 0 && !selectedParticipant) {
+    if (isRestrictedRoom(room) && !selectedParticipant) {
       setVoteError('참여자를 선택해주세요.');
       setIsParticipantModalOpen(true);
       return;
@@ -245,6 +252,19 @@ export function VoteClient({ params }: PageProps) {
 
     try {
       await api.vote(uuid, selectedOptions, fingerprint, selectedParticipant || undefined);
+      setRoom((currentRoom) => {
+        if (!currentRoom || !selectedParticipant) return currentRoom;
+
+        const remainingParticipants = getSelectableParticipants(currentRoom).filter(
+          (participant) => participant !== selectedParticipant
+        );
+
+        return {
+          ...currentRoom,
+          participants: remainingParticipants,
+          remaining_participants: remainingParticipants,
+        };
+      });
       setState('voted');
       showToast(t.voteCompleted);
       // Confetti effect
@@ -256,7 +276,19 @@ export function VoteClient({ params }: PageProps) {
       });
     } catch (err) {
       if (err instanceof APIError && err.status === 409) {
-        setVoteError(t.voteErrors.alreadyVoted);
+        setVoteError(err.message || t.voteErrors.alreadyVoted);
+        if (err.message === '이미 투표한 참여자입니다') {
+          try {
+            const latestRoom = await api.getRoom(uuid);
+            setRoom(latestRoom);
+          } catch (loadErr) {
+            console.error('Failed to refresh room after participant conflict:', loadErr);
+          }
+          setSelectedParticipant('');
+          setSelectedOptions([]);
+          setIsParticipantModalOpen(true);
+          return;
+        }
         setState('voted');
       } else if (err instanceof APIError) {
         setVoteError(err.message || t.voteErrors.submitFailed);
@@ -335,11 +367,11 @@ export function VoteClient({ params }: PageProps) {
     participant: string,
     optionIndex: number
   ): boolean => {
-    if (!room || (room.participants?.length ?? 0) === 0) return true;
+    if (!room || !isRestrictedRoom(room)) return true;
     if (!participant) return false;
 
     const allowedParticipants = room.option_allowed_participants?.[optionIndex];
-    const fallbackParticipants = room.participants ?? [];
+    const fallbackParticipants = getSelectableParticipants(room);
     const optionParticipants = Array.isArray(allowedParticipants)
       ? allowedParticipants
       : fallbackParticipants;
@@ -482,7 +514,8 @@ export function VoteClient({ params }: PageProps) {
     const winnerOption = getWinnerOption();
     const isVoting = state === "voting";
     const isVoted = state === "voted";
-    const isRestrictedPoll = (room.participants?.length ?? 0) > 0;
+    const selectableParticipants = getSelectableParticipants(room);
+    const isRestrictedPoll = isRestrictedRoom(room);
     const shouldShowParticipantModal =
       isVoting && isRestrictedPoll && isParticipantModalOpen;
 
@@ -502,19 +535,25 @@ export function VoteClient({ params }: PageProps) {
                 </p>
               </div>
               <div className="grid gap-2">
-                {room.participants?.map((participant) => (
-                  <button
-                    key={participant}
-                    type="button"
-                    onClick={() => handleParticipantSelect(participant)}
-                    className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-left text-sm font-semibold text-zinc-800 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:hover:border-emerald-400/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-200"
-                  >
-                    <span>{participant}</span>
-                    <User size={16} className="text-zinc-400" />
-                  </button>
-                ))}
+                {selectableParticipants.length > 0 ? (
+                  selectableParticipants.map((participant) => (
+                    <button
+                      key={participant}
+                      type="button"
+                      onClick={() => handleParticipantSelect(participant)}
+                      className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-left text-sm font-semibold text-zinc-800 transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:hover:border-emerald-400/40 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-200"
+                    >
+                      <span>{participant}</span>
+                      <User size={16} className="text-zinc-400" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-5 text-sm font-medium text-zinc-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300">
+                    남은 참여자가 없습니다.
+                  </div>
+                )}
               </div>
-              {selectedParticipant && (
+              {(selectedParticipant || selectableParticipants.length === 0) && (
                 <Button
                   type="button"
                   variant="ghost"
