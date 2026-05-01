@@ -9,6 +9,7 @@ import { useLocale } from "@/components/providers/locale-provider";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { CreateModeDialog } from "@/components/site/create-mode-dialog";
 
 export function Navbar() {
   const router = useRouter();
@@ -66,9 +67,7 @@ export function Navbar() {
           <Button asChild variant="secondary" className="hidden md:inline-flex">
             <Link href="/polls">{messages.navbar.actions.join}</Link>
           </Button>
-          <Button asChild>
-            <Link href="/create">{messages.navbar.actions.create}</Link>
-          </Button>
+          <CreateModeDialog>{messages.navbar.actions.create}</CreateModeDialog>
         </div>
       </div>
     </header>

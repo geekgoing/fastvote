@@ -16,7 +16,9 @@ async def create_room(
     ttl: int,
     tags: list[str] | None = None,
     allow_multiple: bool = False,
-    is_private: bool = False
+    is_private: bool = False,
+    participants: list[str] | None = None,
+    option_allowed_participants: list[list[str]] | None = None,
 ) -> dict:
     """투표방 생성"""
     redis = get_redis()
@@ -26,11 +28,17 @@ async def create_room(
     timestamp = created_at.timestamp()
 
     tags = tags or []
+    participants = participants or []
+    if participants and option_allowed_participants is None:
+        option_allowed_participants = [participants.copy() for _ in options]
+    option_allowed_participants = option_allowed_participants or []
 
     room_data = {
         "uuid": room_uuid,
         "title": title,
         "options": options,
+        "participants": participants,
+        "option_allowed_participants": option_allowed_participants,
         "created_at": created_at.isoformat(),
         "expires_at": expires_at.isoformat(),
         "has_password": password is not None,
