@@ -1,11 +1,10 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import {
   defaultLocale,
   getMessages,
-  getLocaleFromCookie,
   localeCookieName,
   type Locale,
   type Messages,
@@ -26,26 +25,17 @@ type LocaleProviderProps = {
 };
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
+const subscribeToClientMount = () => () => {};
+const getClientMountedSnapshot = () => true;
+const getServerMountedSnapshot = () => false;
 
 export function LocaleProvider({ initialLocale, children }: LocaleProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale ?? defaultLocale);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    // Sync locale from the cookie on the client (default is ko).
-    const cookieLocale = getLocaleFromCookie(
-      document.cookie
-        .split(";")
-        .map((part) => part.trim())
-        .find((part) => part.startsWith(`${localeCookieName}=`))
-        ?.split("=")[1]
-    );
-
-    if (cookieLocale && cookieLocale !== locale) {
-      setLocaleState(cookieLocale);
-    }
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    subscribeToClientMount,
+    getClientMountedSnapshot,
+    getServerMountedSnapshot
+  );
 
   useEffect(() => {
     document.documentElement.lang = locale;

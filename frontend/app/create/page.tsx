@@ -156,7 +156,6 @@ export default function CreatePage() {
         localStorage.setItem(key, JSON.stringify(capped));
       } catch (storageErr) {
         // ignore localStorage errors
-        // eslint-disable-next-line no-console
         console.warn("Failed to save my poll to localStorage", storageErr);
       }
 

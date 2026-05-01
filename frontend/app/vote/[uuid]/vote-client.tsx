@@ -40,7 +40,6 @@ export function VoteClient({ params }: PageProps) {
   const [isParticipantModalOpen, setIsParticipantModalOpen] = useState(false);
   const [voteError, setVoteError] = useState('');
 
-  const [copySuccess, setCopySuccess] = useState(false);
   const [shouldConnectWs, setShouldConnectWs] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -96,7 +95,7 @@ export function VoteClient({ params }: PageProps) {
            if (shareToken) {
              try {
                await api.verifyPassword(uuid, undefined, shareToken);
-             } catch (err) {
+             } catch {
                setState('password');
                return;
              }
@@ -143,7 +142,7 @@ export function VoteClient({ params }: PageProps) {
     };
 
     loadRoom();
-  }, [uuid]);
+  }, [uuid, t.errors.loadFailed, t.errors.notFound]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
@@ -271,9 +270,7 @@ export function VoteClient({ params }: PageProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      setCopySuccess(true);
       showToast(t.copied);
-      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
